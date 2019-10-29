@@ -30,8 +30,8 @@ receiver_email = "eejohnson@scu.edu"
 
 # context = ssl.create_default_context()
 with smtplib.SMTP(smtp_server, port) as smtp:  #Opens connection with variable name "server"
-    smtp.ehlo()
-    smtp.starttls()
+    smtp.ehlo()   #Identifies with mail server we are using
+    smtp.starttls()   #Start encrypting traffic
     smtp.ehlo()
     
     sender_email = "setsystempp@gmail.com"
