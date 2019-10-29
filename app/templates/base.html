@@ -1,0 +1,19 @@
+<!-- <!DOCTYPE html> -->
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    {% if title %}
+    <title>{{ title }} - SETpp</title>
+    {% else %}
+    <title>Welcome to SETpp!</title>
+    {% endif %}
+  </head>
+  <body>
+    <nav>
+      SETpp:
+      <a href="{{ url_for('login') }}">Admin</a>
+      <a href="{{ url_for('survey') }}">Lab Evaluation</a>
+    </nav>
+    {% block content %}{% endblock %}
+  </body>
+</html>
