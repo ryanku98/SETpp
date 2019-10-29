@@ -1,0 +1,1 @@
+# This script will parse the student email roster
