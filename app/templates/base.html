@@ -11,7 +11,8 @@
   <body>
     <nav>
       SETpp:
-      <a href="{{ url_for('login') }}">Admin</a>
+      <a href="{{ url_for('index') }}">Admin Home</a>
+      <a href="{{ url_for('login') }}">Admin Login</a>
       <a href="{{ url_for('survey') }}">Lab Evaluation</a>
     </nav>
     {% block content %}{% endblock %}
