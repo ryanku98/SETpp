@@ -1,8 +1,6 @@
 import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-roster_filename = "roster.csv"
-
 class Config(object):
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'super-secret-coen174-key'
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
