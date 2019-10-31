@@ -17,7 +17,10 @@ class RegistrationForm(FlaskForm):
     password2 = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Register')
     
-    def validate_empty_userbase():
+    # Flask custom validators run when form.validate_on_submit() is called in routes.py,
+    # but this requires validate_<attribute>(self, <attribute>) format
+    # so this is just a small hack to integrate short custom validators
+    def validate_username(self, username):
         if User.query.count() != 0:
             raise ValidationError('An admin already exists for this system.')
 
@@ -47,10 +50,13 @@ class SurveyForm(FlaskForm):
     time_2 = RadioField('How many hours did you spend preparing for the lab?', choices=[('<2','<2'), ('2','2'), ('2.5','2.5'), ('3','3'), ('>3','>3')], validators=[DataRequired()])
     time_3 = RadioField('How many hours did you spend writing lab reports outside the designated lab period?', choices=[('<2','<2'), ('2','2'), ('2.5','2.5'), ('3','3'), ('>3','>3')], validators=[DataRequired()])
     lecture_1 = TextAreaField('What feedback would you give the lecture section instructor (not the lab TA) about the labs?', render_kw={'rows':3,'cols':80}, validators=[DataRequired()])
-
-    submit = SubmitField('Submit')
     
-    def validate_credentials(self):
-        if not studentExists(student_id, course_id):
-            raise ValidationError('Matching student ID and course ID not found on roster, please try again.')
+    submit = SubmitField('Submit')
+        
+    # Flask custom validators run when form.validate_on_submit() is called in routes.py,
+    # but this requires validate_<attribute>(self, <attribute>) format
+    # so this is just a small hack to integrate short custom validators
+    def validate_course_id(self, course_id):
+        if not studentExists(self.student_id.data, self.course_id.data):
+            raise ValidationError('Matching student ID and lab course number not found on roster, please try again.')
         
