@@ -7,7 +7,7 @@ from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-roster_file = '../documents/roster.csv'
+roster_file = 'documents/roster.csv'
 
 class studentSystem:
 
@@ -56,7 +56,6 @@ def make_student_message(sender_email, student_email, name, courseid):
     msg = message.as_string()
     
     return msg
-
 
 
 
