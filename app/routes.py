@@ -1,4 +1,4 @@
-from app import app
+from app import app, db
 from flask import render_template, flash, redirect, url_for
 from app.forms import LoginForm, RegistrationForm, SurveyForm
 from flask_login import current_user, login_user, login_required
@@ -27,7 +27,7 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     if User.query.count() != 0:
-        flash('An admin already exists for this system. Please login for admin privileges.')
+        flash('Redirected to login page: An admin already exists for this system. Please login for admin privileges.')
         return redirect(url_for('login'))
     form = RegistrationForm()
     if form.validate_on_submit():
