@@ -2,4 +2,235 @@
 
 {% block content %}
 <h1>survey here</h1>
+<form action="" method="post" novalidate>
+  {{ form.hidden_tag() }}
+  {# SUBMISSION VALIDATION #}
+  <p>
+    {{ form.student_id.label }}<br>
+    {{ form.student_id(size=32) }}<br>
+    {% for error in form.student_id.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  <p>
+    {{ form.course_id.label }}<br>
+    {{ form.course_id(size=32) }}<br>
+    {% for error in form.course_id.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  
+  {# SURVEY QUESTIONS #}
+  {# LEARNING #}
+  <h3>Learning from Labs</h3>
+  <p>
+    {{ form.learning_1.label }}<br>
+    <tr>
+      <td>Strongly disagree</td>
+      {% for subfield in form.learning_1 %}
+      <td>{{ subfield }}</td>
+      <td>{{ subfield.label }}</td>
+      {% endfor %}
+      <td>Strongly agree</td>
+    </tr><br>
+    {% for error in form.learning_1.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  <p>
+    {{ form.learning_2.label }}<br>
+    <tr>
+      <td>Strongly disagree</td>
+      {% for subfield in form.learning_2 %}
+      <td>{{ subfield }}</td>
+      <td>{{ subfield.label }}</td>
+      {% endfor %}
+      <td>Strongly agree</td>
+    </tr><br>
+    {% for error in form.learning_2.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  <p>
+    {{ form.learning_3.label }}<br>
+    <tr>
+      <td>Strongly disagree</td>
+      {% for subfield in form.learning_3 %}
+      <td>{{ subfield }}</td>
+      <td>{{ subfield.label }}</td>
+      {% endfor %}
+      <td>Strongly agree</td>
+    </tr><br>
+    {% for error in form.learning_3.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  <p>
+    {{ form.learning_4.label }}<br>
+    <tr>
+      <td>Strongly disagree</td>
+      {% for subfield in form.learning_4 %}
+      <td>{{ subfield }}</td>
+      <td>{{ subfield.label }}</td>
+      {% endfor %}
+      <td>Strongly agree</td>
+    </tr><br>
+    {% for error in form.learning_4.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  <p>
+    {{ form.learning_5.label }}<br>
+    {{ form.learning_5 }}<br>
+    {% for error in form.learning_5.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  <p>
+    {{ form.learning_6.label }}<br>
+    {{ form.learning_6 }}<br>
+    {% for error in form.learning_6.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  
+  {# LAB INSTRUCTOR #}
+  <h3>Lab Instructor</h3>
+  <p>
+    {{ form.lab_1.label }}<br>
+    <tr>
+      <td>Strongly disagree</td>
+      {% for subfield in form.lab_1 %}
+      <td>{{ subfield }}</td>
+      <td>{{ subfield.label }}</td>
+      {% endfor %}
+      <td>Strongly agree</td>
+    </tr><br>
+    {% for error in form.lab_1.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  <p>
+    {{ form.lab_2.label }}<br>
+    <tr>
+      <td>Strongly disagree</td>
+      {% for subfield in form.lab_2 %}
+      <td>{{ subfield }}</td>
+      <td>{{ subfield.label }}</td>
+      {% endfor %}
+      <td>Strongly agree</td>
+    </tr><br>
+    {% for error in form.lab_2.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  <p>
+    {{ form.lab_3.label }}<br>
+    <tr>
+      <td>Strongly disagree</td>
+      {% for subfield in form.lab_3 %}
+      <td>{{ subfield }}</td>
+      <td>{{ subfield.label }}</td>
+      {% endfor %}
+      <td>Strongly agree</td>
+    </tr><br>
+    {% for error in form.lab_3.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  <p>
+    {{ form.lab_4.label }}<br>
+    <tr>
+      <td>Strongly disagree</td>
+      {% for subfield in form.lab_4 %}
+      <td>{{ subfield }}</td>
+      <td>{{ subfield.label }}</td>
+      {% endfor %}
+      <td>Strongly agree</td>
+    </tr><br>
+    {% for error in form.lab_4.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  <p>
+    {{ form.lab_5.label }}<br>
+    <tr>
+      <td>Strongly disagree</td>
+      {% for subfield in form.lab_5 %}
+      <td>{{ subfield }}</td>
+      <td>{{ subfield.label }}</td>
+      {% endfor %}
+      <td>Strongly agree</td>
+    </tr><br>
+    {% for error in form.lab_5.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  <p>
+    {{ form.lab_6.label }}<br>
+    {{ form.lab_6 }}<br>
+    {% for error in form.lab_6.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  
+  {# SPACE AND EQUIPMENT #}
+  <h3>Lab Space and Equipment</h3>
+  <p>
+    {{ form.spaceequipment_1.label }}<br>
+    <tr>
+      <td>Strongly disagree</td>
+      {% for subfield in form.spaceequipment_1 %}
+      <td>{{ subfield }}</td>
+      <td>{{ subfield.label }}</td>
+      {% endfor %}
+      <td>Strongly agree</td>
+    </tr><br>
+    {% for error in form.spaceequipment_1.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  <p>
+    {{ form.spaceequipment_2.label }}<br>
+    <tr>
+      <td>Strongly disagree</td>
+      {% for subfield in form.spaceequipment_2 %}
+      <td>{{ subfield }}</td>
+      <td>{{ subfield.label }}</td>
+      {% endfor %}
+      <td>Strongly agree</td>
+    </tr><br>
+    {% for error in form.spaceequipment_2.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  <p>
+    {{ form.spaceequipment_3.label }}<br>
+    <tr>
+      <td>Strongly disagree</td>
+      {% for subfield in form.spaceequipment_3 %}
+      <td>{{ subfield }}</td>
+      <td>{{ subfield.label }}</td>
+      {% endfor %}
+      <td>Strongly agree</td>
+    </tr><br>
+    {% for error in form.spaceequipment_3.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  <p>
+    {{ form.spaceequipment_4.label }}<br>
+    {{ form.spaceequipment_4 }}<br>
+    {% for error in form.spaceequipment_4.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  
+  {# TIME #}
+  <h3>Time Required to Complete Labs</h3>
+  <p>
+    {{ form.time_1.label }}<br>
+    <tr>
+      {% for subfield in form.time_1 %}
+      <td>{{ subfield }}</td>
+      <td>{{ subfield.label }}</td>
+      {% endfor %}
+    </tr><br>
+    {% for error in form.time_1.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  <p>
+    {{ form.time_2.label }}<br>
+    <tr>
+      {% for subfield in form.time_2 %}
+      <td>{{ subfield }}</td>
+      <td>{{ subfield.label }}</td>
+      {% endfor %}
+    </tr><br>
+    {% for error in form.time_2.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  <p>
+    {{ form.time_3.label }}<br>
+    <tr>
+      {% for subfield in form.time_3 %}
+      <td>{{ subfield }}</td>
+      <td>{{ subfield.label }}</td>
+      {% endfor %}
+    </tr><br>
+    {% for error in form.time_3.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  
+  {# LECTURE INSTRUCTOR #}
+  <h3>Lecture Instructor</h3>
+  <p>
+    {{ form.lecture_1.label }}<br>
+    {{ form.lecture_1 }}<br>
+    {% for error in form.lecture_1.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
+  
+  <p>{{ form.submit() }}</p>
+</form>
 {% endblock %}

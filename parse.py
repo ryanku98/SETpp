@@ -30,8 +30,8 @@ system.parseList()
 port = 587  # For SSL
 smtp_server = "smtp.gmail.com"
 with smtplib.SMTP(smtp_server, port) as smtp:  #Opens connection with variable name "server"
-    smtp.ehlo()
-    smtp.starttls()
+    smtp.ehlo()   #Identifies with mail server we are using
+    smtp.starttls()   #Start encrypting traffic
     smtp.ehlo()
     
     sender_email = "setsystempp@gmail.com"
