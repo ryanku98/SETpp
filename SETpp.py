@@ -28,14 +28,12 @@ def register(User):
   db.session.add(new_user)
   db.session.commit()
 
-
-
 # User.query.delete()
 # add_user('Admin', 'admin@scu.edu', 'password')
 
-if len(User.query.all()) == 0:
-  register(User)
-  
-else:
-  login(User)
+# if len(User.query.all()) == 0:
+#   register(User)
+# 
+# else:
+#   login(User)
 # print(get_email('Admin'))
