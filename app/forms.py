@@ -2,6 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField, RadioField, TextAreaField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 from app.models import User
+from app.parse import studentExists
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
@@ -16,7 +17,7 @@ class RegistrationForm(FlaskForm):
     password2 = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Register')
     
-    def validate_empty_userbase(self):
+    def validate_empty_userbase():
         if User.query.count() != 0:
             raise ValidationError('An admin already exists for this system.')
 
@@ -48,3 +49,8 @@ class SurveyForm(FlaskForm):
     lecture_1 = TextAreaField('What feedback would you give the lecture section instructor (not the lab TA) about the labs?', render_kw={'rows':3,'cols':80}, validators=[DataRequired()])
 
     submit = SubmitField('Submit')
+    
+    def validate_credentials(self):
+        if not studentExists(student_id, course_id):
+            raise ValidationError('Matching student ID and course ID not found on roster, please try again.')
+        
