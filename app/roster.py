@@ -11,7 +11,7 @@ roster_file = 'documents/roster.csv'
 # List of headers of roster file
 roster_headers = ['Term', 'Class Nbr', 'Subject', 'Catalog', 'Title', 'Section', 'Instructor', 'Instructor Email', 'Student ID', 'Student', 'Email', 'Tot Enrl', 'Unit Taken', 'Grade', 'Campus', 'Location', 'Add Dt', 'Drop Dt', 'Comb Sect', 'Career', 'Component', 'Session', 'Class Type', 'Grade Base']
 s_id_i = 8
-c_id_i = 2
+c_id_i = 1
 
 class studentSystem:
 
@@ -66,8 +66,10 @@ def studentExists(s_id, c_id):
     with open(roster_file, newline='') as csvfile:
         csvreader = csv.reader(csvfile, delimiter=',')
         for row in csvreader:
-            if row[s_id_i] == s_id and row[c_id_i] == c_id:
+            if row[s_id_i] == str(s_id) and row[c_id_i] == str(c_id):
+                print('Student found')
                 return True
+    print('Student not found')
     return False
 
 # students = studentSystem([], [], [])
