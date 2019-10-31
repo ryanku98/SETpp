@@ -2,11 +2,15 @@ from app import app
 from flask import render_template, flash, redirect, url_for
 from app.forms import LoginForm, RegistrationForm, SurveyForm
 from flask_login import current_user, login_user, login_required
+from app.models import User
 
 @app.route('/')
 @app.route('/index')
-@login_required
+# @login_required
 def index():
+    if not current_user.is_authenticated:
+        flash('Login to view admin page!')
+        return redirect(url_for('login'))
     return render_template('index.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -21,7 +25,10 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('/index'))
+        return redirect(url_for('index'))
+    if User.query.count() != 0:
+        flash('An admin already exists for this system. Please login for admin privileges.')
+        return redirect(url_for('login'))
     form = RegistrationForm()
     if form.validate_on_submit():
         user = User(username=form.username.data, email=form.email.data)
