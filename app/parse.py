@@ -15,7 +15,7 @@ class studentSystem:
     self.courses = list3
 
   def parseList(self):
-    with open('registration.csv', newline='') as csvfile:
+    with open('../documents/registration.csv', newline='') as csvfile:
       spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
       for row in spamreader:
         self.name_list.append(row[8])  # emails.csv: 0
