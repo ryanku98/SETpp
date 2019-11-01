@@ -9,5 +9,6 @@ app.config.from_object(Config)
 db = SQLAlchemy(app)  #db object that represents the database
 migrate = Migrate(app, db)
 login = LoginManager(app)
+login.login_view = 'login'
 
 from app import routes, models  #module will define structure of the database

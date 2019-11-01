@@ -1,6 +1,6 @@
 from datetime import datetime
 from app import db   #adds database object defined in init.py
-
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(db.Model):   #inherits from db.Model, a base class for all models in Flask-SQLAlchemy
     id = db.Column(db.Integer, primary_key=True)      #defines fields as class variables, or instances of db.Column class, taking field type as an argument
@@ -8,6 +8,12 @@ class User(db.Model):   #inherits from db.Model, a base class for all models in 
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
     # posts = db.relationship('Post', backref='author', lazy='dynamic')
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
