@@ -1,4 +1,3 @@
-# This script will parse the student email roster
 import csv
 import smtplib
 import email
@@ -61,6 +60,23 @@ def make_student_message(sender_email, student_email, name, courseid):
     
     return msg
     
+# prof emails (only used at end of deadline)
+def make_prof_message(sender_email, student_email, name, courseid):
+    body = "Hello " + name + ",\nHere are you TA's teaching results"
+    message = MIMEMultipart()
+    message["From"] = sender_email
+    message["To"] = student_email
+    message["Subject"] = name + ", please fill out your lab evaluations"
+    message.attach(MIMEText(body, "plain"))
+    msg = message.as_string()
+    
+    return msg
+
+def main():
+    students = studentSystem([], [], [])
+    students.parseList()
+    sendemails(students)
+    
 # Runs through roster, checks if student of matching student ID and course ID exists
 def studentExists(s_id, c_id):
     with open(roster_file, newline='') as csvfile:
@@ -71,11 +87,3 @@ def studentExists(s_id, c_id):
                 return True
     print('Student not found')
     return False
-
-# students = studentSystem([], [], [])
-# students.parseList()
-# sendemails(students)
-
-
-
-#end
