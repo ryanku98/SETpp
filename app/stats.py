@@ -1,38 +1,30 @@
 import csv
 import pandas as pd
 
-df = pd.read_csv(r'stats.csv')
-print(df)
+# mc_qs = ['The labs helped me understand the lecture material.', 'The labs taught me new skills.', 'The labs taught me to think creatively.', 'I would be able to repeat the labswithout help.', 'The lab instructor was supportive.', 'The lab instructor was approachable.', 'The lab instructor was able to answer my questions.', 'The lab instructor helped me reach a clear understanding of key concepts.', 'The lab instructor fostered a mutually respectful learning environment.', 'The amount of lab equipmentwas sufficient.', 'The available space was sufficient for the lab activities.', 'If lab equipment or setups were not functioning properly, adequate support was available to rectify the situation.']
 
-mean1 = df['The labs helped me understand the lecture material.'].mean()
-print("Mean for \"The labs helped me understand the lecture material.\": " + str(mean))
+# instead scrape questions from the first row of the csv file
+mc_qs = ["The labs helped me understand the lecture material.", "The labs taught me new skills.", "The labs taught me to think creatively."]
 
-mean2 = df['The labs taught me new skills.'].mean()
+total = len(mc_qs)
 
-mean3 = df['The labs taught me to think creatively.'].mean()
+df = pd.read_csv(r'../documents/stats.csv')
+# print(df)
 
-mean4 = df['I would be able to repeat the labswithout help.'].mean()
+means = []
+
+for i in range(0, total):
+    means.append(df[mc_qs[i]].mean())
+
+for i in range(0, total):
+    print("Mean for \"" + mc_qs[i] + "\": " + str(means[i]))
+
+
+
+
+# FREE RESPONSE QUESTIONS
 
 #What was your favorite aspect of the lab?Free text response
-
 #What about the lab would you like to see improved?Free text response
-
-#The lab instructor was supportive. (An answer of 3 is neutral)
-
-#The lab instructor was approachable. (An answer of 3 is neutral)
-
-#The lab instructor was able to answer my questions. (An answer of 3 is neutral)
-
-#The lab instructor helped me reach a clear understanding of key concepts. (An answer of 3 is neutral)
-
-#The lab instructor fostered a mutually respectful learning environment. (An answer of 3 is neutral)
-
 #What, if anything, could the lab instructor do to improve the experience?Free text response
-
-#The amount of lab equipmentwas sufficient. (An answer of 3 is neutral)
-
-#The available space was sufficient for the lab activities. (An answer of 3 is neutral)
-
-#If lab equipment or setups were not functioning properly, adequate support was available to rectify the situation. (An answer of 3 is neutral)
-
 #What, if anything, could improve lab space and equipment?Free text response
