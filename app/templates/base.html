@@ -14,8 +14,9 @@
       {% if current_user.is_authenticated %}
       <a href="{{ url_for('index') }}">Admin Home</a>
       <a href="{{ url_for('logout') }}">Admin Logout</a>
-      {% endif %}
+      {% else %}
       <a href="{{ url_for('login') }}">Admin Login</a>
+      {% endif %}
       <a href="{{ url_for('survey') }}">Lab Evaluation</a>
     </nav>
     <hr>
