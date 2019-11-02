@@ -8,8 +8,8 @@ from werkzeug.urls import url_parse
 from werkzeug.utils import secure_filename
 import os
 
-@app.route('/')
-@app.route('/index')
+@app.route('/', methods=['GET', 'POST'])
+@app.route('/index', methods=['GET', 'POST'])
 def index():
     if not current_user.is_authenticated:
         flash('Login to view admin page!')
@@ -18,7 +18,9 @@ def index():
     if form.validate_on_submit():
         f_roster = form.roster.data
         filename = secure_filename(f_roster.filename)
-        f.save(os.path.join('documents', roster.csv))
+        f_roster.save(os.path.join('documents', 'roster-test.csv'))
+        flash('File uploaded!')
+        return redirect(url_for('index'))
     return render_template('index.html', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -56,6 +58,20 @@ def register():
         flash('Congrats, you are now an admin!')
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
+    
+@app.route('/upload', methods=['GET', 'POST'])
+def upload():
+    if not current_user.is_authenticated:
+        flash('Login to view admin page!')
+        return redirect(url_for('login'))
+    form = UploadForm()
+    if form.validate_on_submit():
+        f_roster = form.roster.data
+        filename = secure_filename(f_roster.filename)
+        f_roster.save(os.path.join('documents', 'roster-test.csv'))
+        flash('File uploaded!')
+        return redirect(url_for('upload'))
+    return render_template('upload.html', form=form)
     
 @app.route('/survey', methods=['GET', 'POST'])
 def survey():
