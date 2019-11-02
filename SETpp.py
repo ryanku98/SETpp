@@ -33,11 +33,11 @@ def register(User):
 
 # if len(User.query.all()) == 0:
 #   register(User)
-<<<<<<< HEAD
+# <<<<<<< HEAD
   
-=======
+# =======
 # 
->>>>>>> bf34d9b5e3b47819a8efb4c96e8024ab3fb47a0d
+# >>>>>>> bf34d9b5e3b47819a8efb4c96e8024ab3fb47a0d
 # else:
 #   login(User)
 # print(get_email('Admin'))
