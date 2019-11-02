@@ -1,8 +1,13 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField, RadioField, TextAreaField
+from wtforms import FileField, StringField, PasswordField, BooleanField, SubmitField, IntegerField, RadioField, TextAreaField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
+from flask_wtf.file import FileRequired
 from app.models import User
 from app.roster import studentExists
+
+class UploadForm(FlaskForm):
+    roster = FileField(validators=[FileRequired()])
+    submit = SubmitField('Upload')
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
