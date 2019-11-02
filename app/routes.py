@@ -1,9 +1,10 @@
-from app import app, db
 from flask import render_template, flash, redirect, url_for, request
-from app.forms import LoginForm, RegistrationForm, SurveyForm
 from flask_login import current_user, login_user, login_required
 from werkzeug.urls import url_parse
+from app import app, db
+from app.forms import LoginForm, RegistrationForm, SurveyForm
 from app.models import User
+from app.results import submitResult
 
 @app.route('/')
 @app.route('/index')
@@ -54,6 +55,6 @@ def register():
 def survey():
     form = SurveyForm()
     if form.validate_on_submit():
-        flash('Survey submission requested for student {}, course {}'.format(form.student_id.data, form.course_id.data))
+        submitResult([form.course_id.data, form.learning_1.data, form.learning_2.data, form.learning_3.data, form.learning_4.data, form.learning_5.data, form.learning_6.data, form.lab_1.data, form.lab_2.data, form.lab_3.data, form.lab_4.data, form.lab_5.data, form.lab_6.data, form.spaceequipment_1.data, form.spaceequipment_2.data, form.spaceequipment_3.data, form.spaceequipment_4.data, form.time_1.data, form.time_2.data, form.time_3.data, form.lecture_1.data])
         return redirect(url_for('survey'))
     return render_template('survey.html', form=form)
