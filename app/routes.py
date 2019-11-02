@@ -8,7 +8,6 @@ from app.results import submitResult
 
 @app.route('/')
 @app.route('/index')
-# @login_required
 def index():
     if not current_user.is_authenticated:
         flash('Login to view admin page!')
@@ -56,5 +55,6 @@ def survey():
     form = SurveyForm()
     if form.validate_on_submit():
         submitResult([form.course_id.data, form.learning_1.data, form.learning_2.data, form.learning_3.data, form.learning_4.data, form.learning_5.data, form.learning_6.data, form.lab_1.data, form.lab_2.data, form.lab_3.data, form.lab_4.data, form.lab_5.data, form.lab_6.data, form.spaceequipment_1.data, form.spaceequipment_2.data, form.spaceequipment_3.data, form.spaceequipment_4.data, form.time_1.data, form.time_2.data, form.time_3.data, form.lecture_1.data])
+        flash('Survey submitted!')
         return redirect(url_for('survey'))
     return render_template('survey.html', form=form)
