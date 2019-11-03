@@ -1,27 +1,22 @@
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import current_user, login_user, logout_user
 from app import app, db
-from app.forms import UploadForm, LoginForm, RegistrationForm, SurveyForm, ResetForm
+from app.forms import UploadForm, LoginForm, RegistrationForm, SurveyForm
 from app.models import User
 from app.results import submitResult
 from werkzeug.urls import url_parse
 from werkzeug.utils import secure_filename
 import os
 
-@app.route('/', methods=['GET', 'POST'])
-@app.route('/index', methods=['GET', 'POST'])
+# @app.route('/', methods=['GET', 'POST'])
+# @app.route('/index', methods=['GET', 'POST'])
+@app.route('/')
+@app.route('/index')
 def index():
     if not current_user.is_authenticated:
         flash('Login to view admin page!')
         return redirect(url_for('login'))
-    form = UploadForm()
-    if form.validate_on_submit():
-        f_roster = form.roster.data
-        filename = secure_filename(f_roster.filename)
-        f_roster.save(os.path.join('documents', 'roster-test.csv'))
-        flash('File uploaded!')
-        return redirect(url_for('index'))
-    return render_template('index.html', form=form)
+    return render_template('index.html', title='Home', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -59,21 +54,23 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
     
-@app.route('/reset', methods=['GET', 'POST'])
-def reset():
-    form = ResetForm()
+@app.route('/changepassword', methods=['GET', 'POST'])
+def changePassword():
+    form = ChangePasswordForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if not user or not user.check_password(form.current_password.data):
             flash('Username or current password incorrect')
-            redirect(url_for('reset'))
+            redirect(url_for('changepassword'))
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-        logout_user()
-        flash('Password Updated')
+        # logout user if logged-in
+        if current_user.is_authenticated:
+            logout_user()
+        flash('Password updated')
         return redirect(url_for('login'))
-    return render_template('reset.html', title='Reset', form=form)
+    return render_template('changePassword.html', title='Change Password', form=form)
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
