@@ -1,7 +1,7 @@
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import current_user, login_user, logout_user
 from app import app, db
-from app.forms import UploadForm, LoginForm, RegistrationForm, SurveyForm
+from app.forms import UploadForm, LoginForm, RegistrationForm, ChangePasswordForm, RequestPasswordResetForm, SurveyForm
 from app.models import User
 from app.results import submitResult
 from werkzeug.urls import url_parse
@@ -16,7 +16,7 @@ def index():
     if not current_user.is_authenticated:
         flash('Login to view admin page!')
         return redirect(url_for('login'))
-    return render_template('index.html', title='Home', form=form)
+    return render_template('index.html', title='Home')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -71,6 +71,16 @@ def changePassword():
         flash('Password updated')
         return redirect(url_for('login'))
     return render_template('changePassword.html', title='Change Password', form=form)
+
+@app.route('/requestreset', methods=['GET', 'POST'])
+def requestResetPassword():
+    form = RequestPasswordResetForm()
+    if form.validate_on_submit():
+        # put reset password code here
+        # email user.email 1 time token?
+        # https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-x-email-support
+        pass
+    return render_template('requestPasswordReset.html', title='Reset Password', form=form)
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
