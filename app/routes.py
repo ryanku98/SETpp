@@ -89,6 +89,8 @@ def upload():
         return redirect(url_for('login'))
     form = UploadForm()
     if form.validate_on_submit():
+        # TODO: uncomment when ready
+        # clearSurveySession()
         f_roster = form.roster.data
         filename = secure_filename(f_roster.filename)
         f_roster.save(os.path.join('documents', 'roster-test.csv'))
@@ -100,6 +102,7 @@ def upload():
 @login_required
 def startSurvey():
     flash('Survey session started')
+    # TODO: send student emails function here
     return redirect(url_for('index'))
 
 @app.route('/survey', methods=['GET', 'POST'])
