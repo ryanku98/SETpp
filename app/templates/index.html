@@ -3,6 +3,6 @@
 {% block content %}
 <h1>home page here</h1>
 <a href="#">Start survey session</a>
-<a href="#">Upload roster</a>
-<a href="/reset">Reset Password</a>
+<a href="{{ url_for('upload') }}">Upload roster</a>
+<a href="{{ url_for('changePassword') }}">Change Password</a>
 {% endblock %}
