@@ -1,12 +1,12 @@
 from flask_wtf import FlaskForm
 from wtforms import FileField, StringField, PasswordField, BooleanField, SubmitField, IntegerField, RadioField, TextAreaField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
-from flask_wtf.file import FileRequired
+from flask_wtf.file import FileRequired, FileAllowed
 from app.models import User
-from app.roster import studentExists
+from app.survey import studentExists
 
 class UploadForm(FlaskForm):
-    roster = FileField(validators=[FileRequired()])
+    roster = FileField(validators=[FileRequired(), FileAllowed(['csv', 'xlsx', 'xls'], 'CSV/Excel files only!')])
     submit = SubmitField('Upload')
 
 class LoginForm(FlaskForm):

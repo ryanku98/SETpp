@@ -1,9 +1,9 @@
 from flask import render_template, flash, redirect, url_for, request
-from flask_login import current_user, login_user, logout_user
+from flask_login import current_user, login_user, logout_user, login_required
 from app import app, db
 from app.forms import UploadForm, LoginForm, RegistrationForm, ChangePasswordForm, RequestPasswordResetForm, SurveyForm
 from app.models import User
-from app.results import submitResult
+from app.survey import submitResult
 from werkzeug.urls import url_parse
 from werkzeug.utils import secure_filename
 import os
@@ -95,7 +95,13 @@ def upload():
         flash('File uploaded!')
         return redirect(url_for('upload'))
     return render_template('upload.html', form=form)
-    
+
+@app.route('/startsurvey')
+@login_required
+def startSurvey():
+    flash('Survey session started')
+    return redirect(url_for('index'))
+
 @app.route('/survey', methods=['GET', 'POST'])
 def survey():
     form = SurveyForm()
