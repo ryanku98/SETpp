@@ -1,8 +1,7 @@
 import os
 import csv
-# import pandas as pd
-# from app.roster import roster_file, course_id_i, instructor_email_i
-from roster import roster_file, course_id_i, instructor_email_i
+import pandas as pd
+from app.roster import roster_file, course_id_i, instructor_email_i
 
 questions_file = os.path.join('documents', 'survey_questions.txt')
 results_file = os.path.join('documents', 'results.csv')
