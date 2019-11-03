@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>admin upload here</h1>
+<form action="" method="post" enctype="multipart/form-data" novalidate>
+  {{ form.hidden_tag() }}
+  <p>
+    {{ form.roster() }}
+    {{ form.submit() }}
+  </p>
+</form>
+{% endblock %}
