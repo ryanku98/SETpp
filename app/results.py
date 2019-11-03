@@ -3,13 +3,11 @@ import csv
 import pandas as pd
 from app.roster import roster_file, course_id_i, instructor_email_i
 
-# qs = ['The labs helped me understand the lecture material.', 'The labs taught me new skills.', 'The labs taught me to think creatively.', 'I would be able to repeat the labswithout help.', 'The lab instructor was supportive.', 'The lab instructor was approachable.', 'The lab instructor was able to answer my questions.', 'The lab instructor helped me reach a clear understanding of key concepts.', 'The lab instructor fostered a mutually respectful learning environment.', 'The amount of lab equipmentwas sufficient.', 'The available space was sufficient for the lab activities.', 'If lab equipment or setups were not functioning properly, adequate support was available to rectify the situation.'
+questions_file = os.path.join('documents', 'survey_questions.txt')
+results_file = os.path.join('documents', 'results.csv')
+statistics_file = os.path.join('documents', 'statistics.csv')
 
-results_file = 'documents/results.csv'
-questions_file = 'documents/survey_questions.txt'
-
-# class ResultsTable():
-
+# initialize results table if DNE
 def initResultsTable():
     if not os.path.exists(results_file):
         with open(results_file, 'w', newline='') as f_results, open(questions_file, 'r') as f_questions:
@@ -21,7 +19,8 @@ def initResultsTable():
             csv_results = csv.writer(f_results, delimiter=',')
             csv_results.writerow(headers)
             print('Headers loaded')
-        
+
+# enters new submission into results table    
 def submitResult(submission):
     # init table if DNE
     if not os.path.exists(results_file):
@@ -32,7 +31,7 @@ def submitResult(submission):
         csv_results = csv.writer(f_results, delimiter=',')
         csv_results.writerow(submission)
         print('New submission inserted')
-
+        
 def searchInstructorEmail(course_id):
     with open(roster_file, 'r', newline='') as f_roster:
         csv_roster = csv.reader(f_roster, delimiter=',')
