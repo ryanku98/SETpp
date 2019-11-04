@@ -1,7 +1,9 @@
 from datetime import datetime
-from app import db, login
+from app import app, db, login
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+import jwt
+from time import time
 
 # inherits from db.Model, a base class for all models in Flask-SQLAlchemy
 class User(UserMixin, db.Model):

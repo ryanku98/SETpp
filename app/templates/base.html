@@ -13,7 +13,6 @@
       SETpp:
       {% if current_user.is_authenticated %}
       <a href="{{ url_for('index') }}">Admin Home</a>
-      <a href="{{ url_for('changePassword') }}">Admin Change Password</a>
       <a href="{{ url_for('logout') }}">Admin Logout</a>
       {% else %}
       <a href="{{ url_for('login') }}">Admin Login</a>

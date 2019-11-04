@@ -7,6 +7,7 @@ from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from flask import url_for
 
 SENDER_EMAIL = "setsystempp@gmail.com"
 SENDER_PSWD = "setpp_coen174"
@@ -48,6 +49,8 @@ def student_message(student):
     msg = message.as_string()
     return msg
 
+# def reset_message():
+#     body =
 
 def send_student_email(student):
     msg = student_message(student)
@@ -65,6 +68,18 @@ def send_email(email, msg):           # GENERIC SEND EMAIL
         smtp.login(SENDER_EMAIL, SENDER_PSWD)
         smtp.sendmail(SENDER_EMAIL, email, msg)
 
+def send_password_reset_email(user):
+    token = user.get_reset_password_token()     #generate token for email
+    body = "Hello, please follow the link to reset password: " + url_for('resetPassword', token=token, _external=True)
+    message = MIMEMultipart()
+    message["From"] = SENDER_EMAIL
+    message["To"] = "eejohnson@scu.edu"
+    message["Subject"] = "Password Reset Request"
+    message.attach(MIMEText(body, "plain"))
+    msg = message.as_string()
+    send_email('eejohnson@scu.edu', msg)
+
+
 
 def send_all_student_emails():
     students = make_students(roster)
@@ -77,7 +92,7 @@ def send_all_student_emails():
 
 ########
 # MAIN #
-send_all_student_emails()
+# send_all_student_emails()
 
 
 

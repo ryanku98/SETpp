@@ -1,9 +1,10 @@
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import current_user, login_user, logout_user, login_required
 from app import app, db
-from app.forms import UploadForm, LoginForm, RegistrationForm, ChangePasswordForm, RequestPasswordResetForm, SurveyForm
+from app.forms import UploadForm, LoginForm, RegistrationForm, ResetPasswordForm, RequestPasswordResetForm, SurveyForm
 from app.models import User
 from app.survey import submitResult
+from app.emails import send_password_reset_email
 from werkzeug.urls import url_parse
 from werkzeug.utils import secure_filename
 import os
@@ -54,14 +55,15 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
 
-@app.route('/changepassword', methods=['GET', 'POST'])
-def changePassword():
-    form = ChangePasswordForm()
+@app.route('/resetPassword/<token>', methods=['GET', 'POST'])
+def resetPassword(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    user = User.verify_reset_password_token(token)
+    if not user:
+        return redirect(url_for('index'))
+    form = ResetPasswordForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
-        if not user or not user.check_password(form.current_password.data):
-            flash('email or current password incorrect')
-            redirect(url_for('changepassword'))
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
@@ -70,7 +72,7 @@ def changePassword():
             logout_user()
         flash('Password updated')
         return redirect(url_for('login'))
-    return render_template('changePassword.html', title='Change Password', form=form)
+    return render_template('resetPassword.html', title='Reset Password', form=form)
 
 @app.route('/requestreset', methods=['GET', 'POST'])
 def requestResetPassword():
@@ -80,7 +82,7 @@ def requestResetPassword():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user:
-            send_password_reset_email(user)
+            send_password_reset_email(user)     #invokes function defined in emails.py
         flash('Check email for instructions to reset password')
         return redirect(url_for('login'))
     return render_template('requestPasswordReset.html', title='Reset Password', form=form)
