@@ -10,22 +10,21 @@ class UploadForm(FlaskForm):
     submit = SubmitField('Upload')
 
 class LoginForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
     remember_me = BooleanField('Remember Me')
     submit = SubmitField('Sign In')
-    
+
 class RegistrationForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
     password2 = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Register')
-    
+
     # Flask custom validators run when form.validate_on_submit() is called in routes.py,
     # but this requires validate_<attribute>(self, <attribute>) format
     # so this is just a small hack to integrate short custom validators
-    def validate_username(self, username):
+    def validate_email(self, email):
         if User.query.count() != 0:
             raise ValidationError('An admin already exists for this system.')
 
@@ -35,7 +34,7 @@ class ChangePasswordForm(FlaskForm):
     password = PasswordField('New Password', validators=[DataRequired()])
     password2 = PasswordField('Repeat New Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Change')
-    
+
 class RequestPasswordResetForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Reset')
@@ -44,7 +43,7 @@ class SurveyForm(FlaskForm):
     # SUBMISSION VALIDATION
     student_id = StringField('Student ID #', validators=[DataRequired()])
     course_id = IntegerField('Lab Course #', validators=[DataRequired()])
-    
+
     # SURVEY QUESTIONS
     learning_1 = RadioField('The labs helped me understand the lecture material. (An answer of 3 is neutral)', choices=[('1','1'), ('2','2'), ('3','3'), ('4','4'), ('5','5')], validators=[DataRequired()])
     learning_2 = RadioField('The labs taught me new skills. (An answer of 3 is neutral)', choices=[('1','1'), ('2','2'), ('3','3'), ('4','4'), ('5','5')], validators=[DataRequired()])
@@ -66,13 +65,12 @@ class SurveyForm(FlaskForm):
     time_2 = RadioField('How many hours did you spend preparing for the lab?', choices=[('<2','<2'), ('2','2'), ('2.5','2.5'), ('3','3'), ('>3','>3')], validators=[DataRequired()])
     time_3 = RadioField('How many hours did you spend writing lab reports outside the designated lab period?', choices=[('<2','<2'), ('2','2'), ('2.5','2.5'), ('3','3'), ('>3','>3')], validators=[DataRequired()])
     lecture_1 = TextAreaField('What feedback would you give the lecture section instructor (not the lab TA) about the labs?', render_kw={'rows':3,'cols':80}, validators=[DataRequired()])
-    
+
     submit = SubmitField('Submit')
-        
+
     # Flask custom validators run when form.validate_on_submit() is called in routes.py,
     # but this requires validate_<attribute>(self, <attribute>) format
     # so this is just a small hack to integrate short custom validators
     def validate_course_id(self, course_id):
         if not studentExists(self.student_id.data, self.course_id.data):
             raise ValidationError('Matching student ID and lab course number not found on roster, please try again.')
-        
