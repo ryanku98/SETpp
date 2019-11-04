@@ -74,12 +74,15 @@ def changePassword():
 
 @app.route('/requestreset', methods=['GET', 'POST'])
 def requestResetPassword():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     form = RequestPasswordResetForm()
     if form.validate_on_submit():
-        # put reset password code here
-        # email user.email 1 time token?
-        # https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-x-email-support
-        pass
+        user = User.query.filter_by(email=form.email.data).first()
+        if user:
+            send_password_reset_email(user)
+        flash('Check email for instructions to reset password')
+        return redirect(url_for('login'))
     return render_template('requestPasswordReset.html', title='Reset Password', form=form)
 
 @app.route('/upload', methods=['GET', 'POST'])

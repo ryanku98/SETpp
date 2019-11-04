@@ -28,12 +28,10 @@ class RegistrationForm(FlaskForm):
         if User.query.count() != 0:
             raise ValidationError('An admin already exists for this system.')
 
-class ChangePasswordForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    current_password = PasswordField('Current Password', validators=[DataRequired()])
+class ResetPasswordForm(FlaskForm):
     password = PasswordField('New Password', validators=[DataRequired()])
     password2 = PasswordField('Repeat New Password', validators=[DataRequired(), EqualTo('password')])
-    submit = SubmitField('Change')
+    submit = SubmitField('Reqest Password Reset')
 
 class RequestPasswordResetForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
