@@ -136,9 +136,12 @@ def send_all_student_emails():
             name = row[student_id_i]
             email = row[student_email_i]
             course = row[course_id_i]
-            student = Student(name, email, course)
-            student.send_email()
-            print("Sent email to student {}".format(email))
+            if not name or not email or not course:
+                pass
+            else:
+                student = Student(name, email, course)
+                student.send_email()
+                print("Sent email to student {}".format(email))
 
 
 # MAIN
