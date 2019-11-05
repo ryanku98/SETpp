@@ -3,10 +3,17 @@ import csv
 import smtplib
 import ssl
 import email
+from flask import url_for
 from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
+from app.survey import student_id_i
+from app.survey import course_id_i
+from app.survey import prof_id_i
+from app.survey import student_id_i
+
 
 
 # CONSTANTS
@@ -16,10 +23,10 @@ stud_msg = os.path.join('app', 'templates', 'email', 'studentSurveyLink.txt')
 prof_msg = os.path.join('app', 'templates', 'email', 'professorSurveyStatistics.txt')
 roster = os.path.join('documents', 'roster.csv')
 roster_headers = ['Term', 'Class Nbr', 'Subject', 'Catalog', 'Title', 'Section', 'Instructor', 'Instructor Email', 'Student ID', 'Student', 'Email', 'Tot Enrl', 'Unit Taken', 'Grade', 'Campus', 'Location', 'Add Dt', 'Drop Dt', 'Comb Sect', 'Career', 'Component', 'Session', 'Class Type', 'Grade Base']
-student_id_i = 8
-course_id_i = 1
-prof_email_i = 7
-student_email_i = 9
+# student_id_i = 8
+# course_id_i = 1
+# prof_email_i = 7
+# student_email_i = 9
 
 
 # STUDENT CLASS
@@ -119,7 +126,7 @@ def send_password_reset_email(user):
 
 def send_all_prof_emails():
 '''Function to email all professors'''
-    with open(roster, newline='') as csvfile:
+    with open(results, newline='') as csvfile:
         next(csvfile)
         sr = csv.reader(csvfile, delimiter=',', quotechar='|')
         for row in sr:
