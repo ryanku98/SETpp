@@ -22,6 +22,7 @@ def initResultsTable():
             csv_results.writerow(getResultsHeaders())
             print('Headers loaded')
 
+
 # retrieve headers: instructor email + class nbr + questions
 def getResultsHeaders():
     with open(questions_file, 'r') as f_questions:
@@ -31,6 +32,7 @@ def getResultsHeaders():
         # put course ID in second column
         headers.insert(1, 'Class Nbr')
         return headers
+
 
 # enters new submission into results table
 def submitResult(submission):
@@ -43,6 +45,7 @@ def submitResult(submission):
         csv_results = csv.writer(f_results, delimiter=',')
         csv_results.writerow(submission)
         print('New submission inserted')
+
 
 # return results in sorted order
 def getSortedResults():
@@ -59,6 +62,7 @@ def getSortedResults():
         entries.sort(key=lambda entry: int(entry[1]))
         return entries
 
+
 def searchInstructorEmail(course_id):
     with open(roster_file, 'r', newline='') as f_roster:
         csv_roster = csv.reader(f_roster, delimiter=',')
@@ -69,12 +73,14 @@ def searchInstructorEmail(course_id):
         print('ERROR: Instructor email not found.')
         return 'ERROR'
 
+
 # delete all files related to last survey session
 def clearSurveySession():
     if os.path.exists(roster_file):
         os.remove(roster_file)
     if os.path.exists(results_file):
         os.remove(results_file)
+
 
 # Runs through roster, checks if student of matching student ID and course ID exists
 def studentExists(s_id, c_id):
@@ -88,11 +94,14 @@ def studentExists(s_id, c_id):
     return False
 
 
-def analyze_data():
-    total = len(mc_qs)
-    df = pd.read_csv(r'../documents/stats.csv')
-    # print(df)
+class SectionData:
+    __init__():
+        
 
+
+
+def analyze_data(results_list):
+    data = pd.DataFrame.from_records(lsit)
     means = []
 
     for i in range(0, total):
