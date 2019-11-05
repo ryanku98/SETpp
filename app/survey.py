@@ -94,18 +94,32 @@ def studentExists(s_id, c_id):
     return False
 
 
-class SectionData:
-    __init__():
+def send_section_emails():
+    # iterate through sorted results
+    # analyze_data() for each new Section
+    # email that dataframe here
+
+
+def analyze_data(data):
+    '''WLL BE CALLED ON INDIVIDUAL SECTIONS'''
+    section_data = pd.DataFrame.from_records(data)
+    means = []; stds = []; frs = [] # means, standard deviations, free responses
+
+    # for question in section_data:
+    #    means.append(question.mean)
+
+    for i in range(0, len(section_data)):
         
 
-
-
-def analyze_data(results_list):
-    data = pd.DataFrame.from_records(lsit)
-    means = []
-
-    for i in range(0, total):
-        means.append(df[mc_qs[i]].mean())
+#    for i in range(0, total):
+#        means.append(df[mc_qs[i]].mean())
 
     for i in range(0, total):
         print("Mean for \"" + mc_qs[i] + "\": " + str(means[i]))
+
+class Section:
+    __init__(self, course_id):
+        self.prof_email
+        self.mean_list = []
+        self.std_list = []
+        self.fr_list = []
