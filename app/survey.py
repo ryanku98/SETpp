@@ -1,5 +1,6 @@
 import os
 import csv
+import xlrd
 import pandas as pd
 
 questions_file = os.path.join('documents', 'survey_questions.txt')
@@ -64,8 +65,8 @@ def searchInstructorEmail(course_id):
         csv_roster = csv.reader(f_roster, delimiter=',')
         for row in csv_roster:
             # if course number matches, return instructor email
-            if row[course_id_i] == str(course_id):
-                return row[instructor_email_i]
+            if removeZeroes(row[course_id_i]) == str(course_id):
+                return row[prof_email_i]
         print('ERROR: Instructor email not found.')
         return 'ERROR'
 
@@ -79,14 +80,42 @@ def clearSurveySession():
 # Runs through roster, checks if student of matching student ID and course ID exists
 def studentExists(s_id, c_id):
     with open(roster_file, 'r', newline='') as f_roster:
+        # skip header row
+        next(f_roster)
         csv_roster = csv.reader(f_roster, delimiter=',')
         for row in csv_roster:
-            if row[student_id_i] == str(s_id) and row[course_id_i] == str(c_id):
+            # print(row[student_id_i].lstrip('0') + ' <-> ' + str(s_id) + ' | ' + row[course_id_i].lstrip('0').rstrip('.0') + ' <-> ' + str(c_id))
+            if removeZeroes(row[student_id_i]) == str(s_id) and removeZeroes(row[course_id_i]) == str(c_id):
                 print('Student found')
                 return True
     print('Student not found')
     return False
 
+def removeZeroes(str):
+    return str.lstrip('0').rstrip('.0')
+
+def convertToCSV(filename):
+    '''Converts uploaded roster to CSV if Excel file, otherwise simply renames'''
+    if not os.path.exists(filename):
+        print('File ' + filename + ' not found.')
+        return
+    ext = filename[filename.rindex('.'):]
+    # if uploaded file is Excel file
+    if ext == '.xlsx' or ext == 'xls':
+        # open excel file
+        wb = xlrd.open_workbook(filename)
+        sheet = wb.sheet_by_index(0)
+        # create CSV file
+        with open(roster_file, 'w', newline='') as f_roster:
+            csv_roster = csv.writer(f_roster, delimiter=',')
+            for row_num in range(sheet.nrows):
+                csv_roster.writerow(sheet.row_values(row_num))
+        # remove after converting
+        os.remove(filename)
+    # if uploaded file is CSV
+    elif ext == '.csv':
+        # rename to proper roster filename
+        os.rename(filename, roster_file)
 
 def analyze_data():
     total = len(mc_qs)

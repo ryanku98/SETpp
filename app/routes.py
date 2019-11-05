@@ -3,7 +3,7 @@ from flask_login import current_user, login_user, logout_user, login_required
 from app import app, db
 from app.forms import UploadForm, LoginForm, RegistrationForm, ResetPasswordForm, RequestPasswordResetForm, ChangePasswordForm, SurveyForm
 from app.models import User
-from app.survey import submitResult, roster_file
+from app.survey import submitResult, roster_file, clearSurveySession, convertToCSV
 from app.emails import send_password_reset_email, send_all_student_emails
 from werkzeug.urls import url_parse
 from werkzeug.utils import secure_filename
@@ -69,8 +69,9 @@ def changePassword():
             if current_user.is_authenticated:
                 logout_user()
             flash('Password updated')
-        flash('Incorrect password')
-        return redirect(url_for('changePassword'))
+        else:
+            flash('Incorrect password')
+            return redirect(url_for('changePassword'))
     return render_template('changePassword.html', title='Change Password', form=form)
 
 
@@ -113,9 +114,13 @@ def upload():
         return redirect(url_for('login'))
     form = UploadForm()
     if form.validate_on_submit():
+        # clear old roster and results
+        clearSurveySession()
         f_roster = form.roster.data
         filename = secure_filename(f_roster.filename)
-        f_roster.save(roster_file)
+        f_roster.save(os.path.join('documents', filename))
+        # convert to CSV if Excel file
+        f_roster = convertToCSV(os.path.join('documents', filename))
         flash('File uploaded!')
         return redirect(url_for('upload'))
     return render_template('upload.html', form=form)
@@ -124,6 +129,13 @@ def upload():
 @login_required
 def startSurvey():
     flash('Survey session started')
+    send_all_student_emails()
+    return redirect(url_for('index'))
+    
+@app.route('/sendreminder')
+@login_required
+def sendReminder():
+    flash('Email reminders set')
     send_all_student_emails()
     return redirect(url_for('index'))
 

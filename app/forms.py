@@ -31,12 +31,12 @@ class ChangePasswordForm(FlaskForm):
     current_password = PasswordField('Current Password', validators=[DataRequired()])
     password = PasswordField('New Password', validators=[DataRequired()])
     password2 = PasswordField('Repeat New Password', validators=[DataRequired(), EqualTo('password')])
-    submit = SubmitField('Reqest Password Reset')
+    submit = SubmitField('Change password')
 
 class ResetPasswordForm(FlaskForm):
     password = PasswordField('New Password', validators=[DataRequired()])
     password2 = PasswordField('Repeat New Password', validators=[DataRequired(), EqualTo('password')])
-    submit = SubmitField('Reqest Password Reset')
+    submit = SubmitField('Request Password Reset')
 
 class RequestPasswordResetForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
