@@ -11,10 +11,10 @@ from email.mime.text import MIMEText
 
 # CONSTANTS
 SENDER_EMAIL = "setsystempp@gmail.com"; SENDER_PSWD = "setpp_coen174"
-SUBJECT = "SET++ Lab Evaluations"; LINK = "google.com"
-stud_msg = os.path.join('templates', 'email', 'studentSurveyLink.txt')
-prof_msg = os.path.join('templates', 'email', 'professorSurveyStatistics.txt')
-roster = os.path.join('..', 'documents', 'roster.csv')
+SUBJECT = "SET++ Lab Evaluations"; LINK = "https://localhost:5000/survey"
+stud_msg = os.path.join('app', 'templates', 'email', 'studentSurveyLink.txt')
+prof_msg = os.path.join('app', 'templates', 'email', 'professorSurveyStatistics.txt')
+roster = os.path.join('documents', 'roster.csv')
 roster_headers = ['Term', 'Class Nbr', 'Subject', 'Catalog', 'Title', 'Section', 'Instructor', 'Instructor Email', 'Student ID', 'Student', 'Email', 'Tot Enrl', 'Unit Taken', 'Grade', 'Campus', 'Location', 'Add Dt', 'Drop Dt', 'Comb Sect', 'Career', 'Component', 'Session', 'Class Type', 'Grade Base']
 student_id_i = 8
 course_id_i = 1
@@ -142,6 +142,6 @@ def send_all_student_emails():
 
 
 # MAIN
-send_all_student_emails()
+# send_all_student_emails()
 
 # end
