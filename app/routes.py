@@ -3,7 +3,7 @@ from flask_login import current_user, login_user, logout_user, login_required
 from app import app, db
 from app.forms import UploadForm, LoginForm, RegistrationForm, ResetPasswordForm, RequestPasswordResetForm, ChangePasswordForm, SurveyForm
 from app.models import User
-from app.survey import submitResult
+from app.survey import submitResult, roster_file
 from app.emails import send_password_reset_email, send_all_student_emails
 from werkzeug.urls import url_parse
 from werkzeug.utils import secure_filename
@@ -115,7 +115,7 @@ def upload():
     if form.validate_on_submit():
         f_roster = form.roster.data
         filename = secure_filename(f_roster.filename)
-        f_roster.save(os.path.join('documents', 'roster-test.csv'))
+        f_roster.save(roster_file)
         flash('File uploaded!')
         return redirect(url_for('upload'))
     return render_template('upload.html', form=form)
