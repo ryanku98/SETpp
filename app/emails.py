@@ -29,8 +29,8 @@ class Student:
         self.email = email
         self.course = course
 
-    # Creates an email message string based on the student
     def create_message(self):
+        '''Creates an email message string based on the student'''
         with open(stud_msg, 'r') as file:
             body = file.read().format(self.name, self.course, LINK)
         message = MIMEMultipart()
@@ -54,8 +54,8 @@ class Professor:
     def __init__(self, email):
         self.email = email
 
-    # Will be pretty similar to one above, pull from the other email template
     def create_message(self):
+        '''Will be pretty similar to one above, pull from the other email template'''
         with open(prof_msg, 'r') as file:
             body = file.read().format(self.email, LINK)
         message = MIMEMultipart()
@@ -88,8 +88,8 @@ def message(email, template, name, course):
 '''
 
 
-# This is the generic SMTP emailing method (able to be used anywhere)
 def email(email, msg):
+'''This is the generic SMTP emailing method (able to be used anywhere)'''
     smtp_server = "smtp.gmail.com"
     port = 587
     context = ssl.create_default_context()
@@ -104,8 +104,8 @@ def email(email, msg):
             print("Error: invalid email")
 
 
-# Evan's password reset function
 def send_password_reset_email(user):
+'''Evan's password reset function'''
     token = user.get_reset_password_token()     #generate token for email
     body = "Hello, please follow the link to reset password: " + url_for('resetPassword', token=token, _external=True)
     message = MIMEMultipart()
@@ -117,8 +117,8 @@ def send_password_reset_email(user):
     email('eejohnson@scu.edu', msg)
 
 
-# Function to email all professors
 def send_all_prof_emails():
+'''Function to email all professors'''
     with open(roster, newline='') as csvfile:
         next(csvfile)
         sr = csv.reader(csvfile, delimiter=',', quotechar='|')
@@ -133,8 +133,8 @@ def send_all_prof_emails():
                 print("Sent email to professor {}".format(email))
 
 
-# This is the function that should be called when the survey is started
 def send_all_student_emails():
+'''This is the function that should be called when the survey is started'''
     with open(roster, newline='') as csvfile:
         next(csvfile)
         sr = csv.reader(csvfile, delimiter=',', quotechar='|')
