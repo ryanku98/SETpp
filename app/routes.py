@@ -4,7 +4,7 @@ from app import app, db
 from app.forms import UploadForm, LoginForm, RegistrationForm, ResetPasswordForm, RequestPasswordResetForm, ChangePasswordForm, SurveyForm
 from app.models import User
 from app.survey import submitResult
-from app.emails import send_password_reset_email
+from app.emails import send_password_reset_email, send_all_student_emails
 from werkzeug.urls import url_parse
 from werkzeug.utils import secure_filename
 import os
@@ -124,6 +124,7 @@ def upload():
 @login_required
 def startSurvey():
     flash('Survey session started')
+    send_all_student_emails()
     return redirect(url_for('index'))
 
 @app.route('/survey', methods=['GET', 'POST'])
