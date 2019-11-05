@@ -8,6 +8,7 @@ from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from threading import Thread
 
 
 # CONSTANTS
@@ -112,7 +113,7 @@ def send_password_reset_email(user):
     message["Subject"] = "Password Reset Request"
     message.attach(MIMEText(body, "plain"))
     msg = message.as_string()
-    email('eejohnson@scu.edu', msg)
+    Thread( target = email, args = ('eejohnson@scu.edu', msg) ).start()
 
 
 # Function to email all professors
