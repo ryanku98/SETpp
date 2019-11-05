@@ -8,12 +8,8 @@ from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
-from app.survey import student_id_i
-from app.survey import course_id_i
-from app.survey import prof_id_i
-from app.survey import student_id_i
-
+from threading import Thread
+from app.survey import student_id_i, course_id_i, prof_email_i, student_email_i
 
 
 # CONSTANTS
@@ -96,7 +92,7 @@ def message(email, template, name, course):
 
 
 def email(email, msg):
-'''This is the generic SMTP emailing method (able to be used anywhere)'''
+    '''This is the generic SMTP emailing method (able to be used anywhere)'''
     smtp_server = "smtp.gmail.com"
     port = 587
     context = ssl.create_default_context()
@@ -112,20 +108,20 @@ def email(email, msg):
 
 
 def send_password_reset_email(user):
-'''Evan's password reset function'''
+    '''Evan's password reset function'''
     token = user.get_reset_password_token()     #generate token for email
     body = "Hello, please follow the link to reset password: " + url_for('resetPassword', token=token, _external=True)
     message = MIMEMultipart()
     message["From"] = SENDER_EMAIL
-    message["To"] = "eejohnson@scu.edu"
+    message["To"] = user.email
     message["Subject"] = "Password Reset Request"
     message.attach(MIMEText(body, "plain"))
     msg = message.as_string()
-    email('eejohnson@scu.edu', msg)
+    Thread( target = email, args = (message['To'], msg) ).start()
 
 
 def send_all_prof_emails():
-'''Function to email all professors'''
+    '''Function to email all professors'''
     with open(results, newline='') as csvfile:
         next(csvfile)
         sr = csv.reader(csvfile, delimiter=',', quotechar='|')
@@ -141,7 +137,7 @@ def send_all_prof_emails():
 
 
 def send_all_student_emails():
-'''This is the function that should be called when the survey is started'''
+    '''This is the function that should be called when the survey is started'''
     with open(roster, newline='') as csvfile:
         next(csvfile)
         sr = csv.reader(csvfile, delimiter=',', quotechar='|')
