@@ -1,8 +1,8 @@
 import os
 import csv
 import smtplib
-import email
 import ssl
+import email
 from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
@@ -11,7 +11,7 @@ from email.mime.text import MIMEText
 
 # CONSTANTS
 SENDER_EMAIL = "setsystempp@gmail.com"; SENDER_PSWD = "setpp_coen174"
-SUBJECT = "SET++ Lab Evaluations"; LINK = "https://localhost:5000/survey"
+SUBJECT = "SET++ Lab Evaluations"; LINK = "http://localhost:5000/survey"
 stud_msg = os.path.join('app', 'templates', 'email', 'studentSurveyLink.txt')
 prof_msg = os.path.join('app', 'templates', 'email', 'professorSurveyStatistics.txt')
 roster = os.path.join('documents', 'roster.csv')
