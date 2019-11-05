@@ -98,7 +98,10 @@ def email(email, msg):
         smtp.starttls(context=context)   #Start encrypting traffic
         smtp.ehlo()
         smtp.login(SENDER_EMAIL, SENDER_PSWD)
-        smtp.sendmail(SENDER_EMAIL, email, msg)
+        try:
+            smtp.sendmail(SENDER_EMAIL, email, msg)
+        except:
+            print("Error: invalid email")
 
 
 # Evan's password reset function
@@ -122,9 +125,12 @@ def send_all_prof_emails():
         for row in sr:
             email = row[prof_email_i]
             course = row[course_id_i]
-            prof = Professor(email)
-            prof.send_email()
-            print("Sent email to professor {}".format(email))
+            if not email or not course:
+                pass
+            else:
+                prof = Professor(name, email, course)
+                prof.send_email()
+                print("Sent email to professor {}".format(email))
 
 
 # This is the function that should be called when the survey is started
@@ -141,7 +147,7 @@ def send_all_student_emails():
             else:
                 student = Student(name, email, course)
                 student.send_email()
-                print("Sent email to student {}".format(email))
+                # print("Sent email to student {}".format(email))
 
 
 # MAIN
