@@ -1,7 +1,7 @@
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import current_user, login_user, logout_user, login_required
 from app import app, db
-from app.forms import UploadForm, LoginForm, RegistrationForm, ResetPasswordForm, RequestPasswordResetForm, SurveyForm
+from app.forms import UploadForm, LoginForm, RegistrationForm, ResetPasswordForm, RequestPasswordResetForm, ChangePasswordForm, SurveyForm
 from app.models import User
 from app.survey import submitResult
 from app.emails import send_password_reset_email
@@ -55,11 +55,30 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
 
+@app.route('/changePassword', methods=['GET', 'POST'])
+def changePassword():
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+        if current_user.check_password(form.current_password.data):
+            current_user.set_password(form.password.data)
+            db.session.add(current_user)
+            db.session.commit()
+            #logout user if logged-in
+            if current_user.is_authenticated:
+                logout_user()
+            flash('Password updated')
+        flash('Incorrect password')
+        return redirect(url_for('changePassword'))
+    return render_template('changePassword.html', title='Change Password', form=form)
+
+
 @app.route('/resetPassword/<token>', methods=['GET', 'POST'])
 def resetPassword(token):
     if current_user.is_authenticated:
         return redirect(url_for('index'))
-    user = User.verify_reset_password_token(token)
+    user = User.verify_reset_password_token(token)     #Decode token, should get id of admin user
     if not user:
         return redirect(url_for('index'))
     form = ResetPasswordForm()
