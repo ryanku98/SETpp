@@ -135,7 +135,7 @@ def startSurvey():
 @app.route('/sendreminder')
 @login_required
 def sendReminder():
-    flash('Email reminders set')
+    flash('Email reminders sent')
     send_all_student_emails()
     return redirect(url_for('index'))
 
