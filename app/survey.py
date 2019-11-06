@@ -94,12 +94,6 @@ def studentExists(s_id, c_id):
     return False
 
 
-def send_section_emails():
-    # iterate through sorted results
-    # analyze_data() for each new Section
-    # email that dataframe here
-
-
 def analyze_data(section_data):
     '''WLL BE CALLED ON INDIVIDUAL SECTIONS'''
     df = pd.DataFrame.from_records(section_data)
@@ -119,6 +113,7 @@ def analyze_data(section_data):
             stds.append(df[section_data[i]].std())
 
 
+# SECTION CLASS
 class Section:
     __init__(self, course_id):
         self.prof_email
