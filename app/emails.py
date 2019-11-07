@@ -9,7 +9,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from flask import url_for
 from threading import Thread
-from app.survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, stud_email_i_roster, roster_file, results_file
+from app.survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_file, results_file
 
 # STUDENT CLASS
 class Student:
@@ -38,7 +38,7 @@ def send_all_student_emails():
     '''This is the function that should be called when the survey is started'''
     with open(roster_file, newline='') as csvfile:
         next(csvfile)
-        sr = csv.reader(csvfile, delimiter=',', quotechar='|')
+        sr = csv.reader(csvfile, delimiter=',')
         for row in sr:
             s_id = row[s_id_i_roster]
             email = row[stud_email_i_roster]
@@ -73,14 +73,14 @@ def send_all_prof_emails():
     '''Function to email all professors'''
     with open(results_file, newline='') as csvfile:
         next(csvfile)
-        sr = csv.reader(csvfile, delimiter=',', quotechar='|')
+        sr = csv.reader(csvfile, delimiter=',')
         for row in sr:
-            email = row[prof_ema]
-            c_id = row[course_]
-            if row[prof_ema] and row[course_]:
-                prof = Professor(email)
+            email = row[prof_email_i_results]
+            c_id = row[c_id_i_results]
+            if email and c_id:
+                prof = Professor(email, c_id)
                 prof.send_email()
-                print("Sent email to professor {}".format(email))
+                print("Sent email to professor {} for lab {}".format(email, c_id))
 
 def email(email, msg):
     '''This is the generic SMTP emailing method (able to be used anywhere)'''
