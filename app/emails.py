@@ -9,7 +9,9 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from flask import url_for
 from threading import Thread
-from app.survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_file, results_file
+from app.survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_file, results_file, studentExists
+
+SURVEY_LINK = "http://localhost:5000/survey"
 
 # STUDENT CLASS
 class Student:
@@ -17,12 +19,17 @@ class Student:
         self.id = id
         self.email = email
         self.course = course
+        print(SURVEY_LINK + '?s=' + str(self.id) + '&c=' + str(self.course))
 
     def create_message(self):
         '''Creates an email message string based on the student'''
         stud_msg_template = os.path.join('app', 'templates', 'email', 'studentSurveyLink.txt')
         with open(stud_msg_template, 'r') as file:
-            body = file.read().format(self.id, self.course, LINK)
+            link = SURVEY_LINK
+            # create query string values for form prefilling
+            if studentExists(self.id, self.course):
+                link = SURVEY_LINK + '?s=' + self.id + '&c=' + self.course
+            body = file.read().format(self.id, self.course, link)
         message = MIMEMultipart()
         message["From"] = SENDER_EMAIL
         message["To"] = self.email
@@ -58,7 +65,7 @@ class Professor:
         '''Will be pretty similar to one above, pull from the other email template'''
         prof_msg_template = os.path.join('app', 'templates', 'email', 'professorSurveyStatistics.txt')
         with open(prof_msg_template, 'r') as file:
-            body = file.read().format(self.email, LINK)
+            body = file.read().format(self.email, SURVEY_LINK)
         message = MIMEMultipart()
         message["From"] = SENDER_EMAIL
         message["To"] = self.email
@@ -84,8 +91,9 @@ def send_all_prof_emails():
 
 def email(email, msg):
     '''This is the generic SMTP emailing method (able to be used anywhere)'''
-    SENDER_EMAIL = "setsystempp@gmail.com"; SENDER_PSWD = "setpp_coen174"
-    SUBJECT = "SET++ Lab Evaluations"; LINK = "http://localhost:5000/survey"
+    SENDER_EMAIL = "setsystempp@gmail.com"
+    SENDER_PSWD = "setpp_coen174"
+    SUBJECT = "SET++ Lab Evaluations"
     smtp_server = "smtp.gmail.com"
     port = 587
     context = ssl.create_default_context()
