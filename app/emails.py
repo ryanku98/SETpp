@@ -3,18 +3,18 @@ import csv
 import smtplib
 import ssl
 import email
-from flask import url_for
 from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from flask import url_for
 from threading import Thread
-from app.survey import student_id_i, course_id_i, prof_email_i, student_email_i, roster_file, results_file
+from app.survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, stud_email_i_roster, roster_file, results_file
 
 # STUDENT CLASS
 class Student:
-    def __init__(self, name, email, course):
-        self.name = name
+    def __init__(self, id, email, course):
+        self.id = id
         self.email = email
         self.course = course
 
@@ -22,11 +22,11 @@ class Student:
         '''Creates an email message string based on the student'''
         stud_msg_template = os.path.join('app', 'templates', 'email', 'studentSurveyLink.txt')
         with open(stud_msg_template, 'r') as file:
-            body = file.read().format(self.name, self.course, LINK)
+            body = file.read().format(self.id, self.course, LINK)
         message = MIMEMultipart()
         message["From"] = SENDER_EMAIL
         message["To"] = self.email
-        message["Subject"] = "{} - {}".format(self.name, SUBJECT)
+        message["Subject"] = "{} - {}".format(self.id, SUBJECT)
         message.attach(MIMEText(body, "plain"))
         return message.as_string()
 
@@ -34,22 +34,25 @@ class Student:
     def send_email(self):
         email(self.email, self.create_message())
 
-
 def send_all_student_emails():
     '''This is the function that should be called when the survey is started'''
     with open(roster_file, newline='') as csvfile:
         next(csvfile)
         sr = csv.reader(csvfile, delimiter=',', quotechar='|')
         for row in sr:
-            if row[student_id_i] and row[student_email_i] and row[course_id_i]:
-                student = Student(name, email, course)
+            s_id = row[s_id_i_roster]
+            email = row[stud_email_i_roster]
+            c_id = row[c_id_i_roster]
+            if s_id and email and c_id:
+                student = Student(s_id, email, c_id)
                 student.send_email()
                 print("Sent email to student {}".format(email))
 
 # PROFESSOR CLASS
 class Professor:
-    def __init__(self, email):
+    def __init__(self, email, course):
         self.email = email
+        self.course = course
 
     def create_message(self):
         '''Will be pretty similar to one above, pull from the other email template'''
@@ -59,7 +62,7 @@ class Professor:
         message = MIMEMultipart()
         message["From"] = SENDER_EMAIL
         message["To"] = self.email
-        message["Subject"] =  "Professor {} - {}".format(self.email, SUBJECT)
+        message["Subject"] =  "Professor {} - {} - Lab {}".format(self.email, SUBJECT, self.course)
         message.attach(MIMEText(body, "plain"))
         return message.as_string()
 
@@ -72,8 +75,10 @@ def send_all_prof_emails():
         next(csvfile)
         sr = csv.reader(csvfile, delimiter=',', quotechar='|')
         for row in sr:
-            if row[prof_email_i] and row[course_id_i]:
-                prof = Professor(name, email, course)
+            email = row[prof_ema]
+            c_id = row[course_]
+            if row[prof_ema] and row[course_]:
+                prof = Professor(email)
                 prof.send_email()
                 print("Sent email to professor {}".format(email))
 
