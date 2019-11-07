@@ -9,7 +9,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from flask import url_for
 from threading import Thread
-from app.survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_file, results_file, studentExists
+from app.survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_file, results_file, studentExists, removeZeroes
 
 SURVEY_LINK = "http://localhost:5000/survey"
 
@@ -47,9 +47,9 @@ def send_all_student_emails():
         next(csvfile)
         sr = csv.reader(csvfile, delimiter=',')
         for row in sr:
-            s_id = row[s_id_i_roster]
+            s_id = removeZeroes(row[s_id_i_roster])
             email = row[stud_email_i_roster]
-            c_id = row[c_id_i_roster]
+            c_id = removeZeroes(row[c_id_i_roster])
             if s_id and email and c_id:
                 student = Student(s_id, email, c_id)
                 student.send_email()
@@ -83,7 +83,7 @@ def send_all_prof_emails():
         sr = csv.reader(csvfile, delimiter=',')
         for row in sr:
             email = row[prof_email_i_results]
-            c_id = row[c_id_i_results]
+            c_id = removeZeroes(row[c_id_i_results])
             if email and c_id:
                 prof = Professor(email, c_id)
                 prof.send_email()
