@@ -3,14 +3,12 @@ from flask_login import current_user, login_user, logout_user, login_required
 from app import app, db
 from app.forms import UploadForm, LoginForm, RegistrationForm, ResetPasswordForm, RequestPasswordResetForm, ChangePasswordForm, SurveyForm
 from app.models import User
-from app.survey import submitResult, roster_file
+from app.survey import submitResult, roster_file, clearSurveySession, convertToCSV, studentExists
 from app.emails import send_password_reset_email, send_all_student_emails
-from werkzeug.urls import url_parse
+# from werkzeug.urls import url_parse
 from werkzeug.utils import secure_filename
 import os
 
-# @app.route('/', methods=['GET', 'POST'])
-# @app.route('/index', methods=['GET', 'POST'])
 @app.route('/')
 @app.route('/index')
 def index():
@@ -69,10 +67,10 @@ def changePassword():
             if current_user.is_authenticated:
                 logout_user()
             flash('Password updated')
-        flash('Incorrect password')
-        return redirect(url_for('changePassword'))
+        else:
+            flash('Incorrect password')
+            return redirect(url_for('changePassword'))
     return render_template('changePassword.html', title='Change Password', form=form)
-
 
 @app.route('/resetPassword/<token>', methods=['GET', 'POST'])
 def resetPassword(token):
@@ -113,9 +111,13 @@ def upload():
         return redirect(url_for('login'))
     form = UploadForm()
     if form.validate_on_submit():
+        # clear old roster and results
+        clearSurveySession()
         f_roster = form.roster.data
         filename = secure_filename(f_roster.filename)
-        f_roster.save(roster_file)
+        f_roster.save(os.path.join('documents', filename))
+        # convert to CSV if Excel file
+        f_roster = convertToCSV(os.path.join('documents', filename))
         flash('File uploaded!')
         return redirect(url_for('upload'))
     return render_template('upload.html', form=form)
@@ -127,9 +129,24 @@ def startSurvey():
     send_all_student_emails()
     return redirect(url_for('index'))
 
+@app.route('/sendreminder')
+@login_required
+def sendReminder():
+    flash('Email reminders sent')
+    send_all_student_emails()
+    return redirect(url_for('index'))
+
 @app.route('/survey', methods=['GET', 'POST'])
 def survey():
     form = SurveyForm()
+    if request.method == 'GET':
+        s_id = request.args.get('s')
+        c_id = request.args.get('c')
+        # pre-fill student ID and course # if valid (avoids accidental tampering)
+        # also avoids false presumption by user that prefilled data must be accurate
+        if studentExists(s_id, c_id):
+            form.student_id.data = s_id
+            form.course_id.data = c_id
     if form.validate_on_submit():
         submitResult([form.course_id.data, form.learning_1.data, form.learning_2.data, form.learning_3.data, form.learning_4.data, form.learning_5.data, form.learning_6.data, form.lab_1.data, form.lab_2.data, form.lab_3.data, form.lab_4.data, form.lab_5.data, form.lab_6.data, form.spaceequipment_1.data, form.spaceequipment_2.data, form.spaceequipment_3.data, form.spaceequipment_4.data, form.time_1.data, form.time_2.data, form.time_3.data, form.lecture_1.data])
         flash('Survey submitted!')

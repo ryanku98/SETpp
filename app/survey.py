@@ -1,18 +1,17 @@
 import os
 import csv
+import xlrd
 import pandas as pd
 
 questions_file = os.path.join('documents', 'survey_questions.txt')
 roster_file = os.path.join('documents', 'roster.csv')
 results_file = os.path.join('documents', 'results.csv')
-# statistics_file = os.path.join('documents', 'statistics.csv')
-# List of headers of roster file
-# roster_headers = ['Term', 'Class Nbr', 'Subject', 'Catalog', 'Title', 'Section', 'Instructor', 'Instructor Email', 'Student ID', 'Student', 'Email', 'Tot Enrl', 'Unit Taken', 'Grade', 'Campus', 'Location', 'Add Dt', 'Drop Dt', 'Comb Sect', 'Career', 'Component', 'Session', 'Class Type', 'Grade Base']
-student_id_i = 8
-course_id_i = 1
-prof_email_i = 7
-student_email_i = 9
-
+s_id_i_roster = 8
+c_id_i_roster = 1
+prof_email_i_roster = 7
+stud_email_i_roster = 9
+prof_email_i_results = 0
+c_id_i_results = 1
 
 # initialize results table if DNE
 def initResultsTable():
@@ -68,8 +67,8 @@ def searchInstructorEmail(course_id):
         csv_roster = csv.reader(f_roster, delimiter=',')
         for row in csv_roster:
             # if course number matches, return instructor email
-            if row[course_id_i] == str(course_id):
-                return row[instructor_email_i]
+            if removeZeroes(row[c_id_i_roster]) == str(course_id):
+                return row[prof_email_i_roster]
         print('ERROR: Instructor email not found.')
         return 'ERROR'
 
@@ -85,14 +84,42 @@ def clearSurveySession():
 # Runs through roster, checks if student of matching student ID and course ID exists
 def studentExists(s_id, c_id):
     with open(roster_file, 'r', newline='') as f_roster:
+        # skip header row
+        next(f_roster)
         csv_roster = csv.reader(f_roster, delimiter=',')
         for row in csv_roster:
-            if row[student_id_i] == str(s_id) and row[course_id_i] == str(c_id):
+            # print(row[s_id_i_roster].lstrip('0') + ' <-> ' + str(s_id) + ' | ' + row[c_id_i_roster].lstrip('0').rstrip('.0') + ' <-> ' + str(c_id))
+            if removeZeroes(row[s_id_i_roster]) == str(s_id) and removeZeroes(row[c_id_i_roster]) == str(c_id):
                 print('Student found')
                 return True
     print('Student not found')
     return False
 
+def removeZeroes(str):
+    return str.lstrip('0').rstrip('.0')
+
+def convertToCSV(filename):
+    '''Converts uploaded roster to CSV if Excel file, otherwise simply renames'''
+    if not os.path.exists(filename):
+        print('File ' + filename + ' not found.')
+        return
+    ext = filename[filename.rindex('.'):]
+    # if uploaded file is Excel file
+    if ext == '.xlsx' or ext == 'xls':
+        # open excel file
+        wb = xlrd.open_workbook(filename)
+        sheet = wb.sheet_by_index(0)
+        # create CSV file
+        with open(roster_file, 'w', newline='') as f_roster:
+            csv_roster = csv.writer(f_roster, delimiter=',')
+            for row_num in range(sheet.nrows):
+                csv_roster.writerow(sheet.row_values(row_num))
+        # remove after converting
+        os.remove(filename)
+    # if uploaded file is CSV
+    elif ext == '.csv':
+        # rename to proper roster filename
+        os.rename(filename, roster_file)
 
 def analyze_data(section_data):
     '''WLL BE CALLED ON INDIVIDUAL SECTIONS'''
