@@ -15,6 +15,25 @@ SENDER_EMAIL = "setsystempp@gmail.com"
 SURVEY_LINK = "http://localhost:5000/survey"
 SUBJECT = "SET++ Lab Evaluations"
 
+
+def send_email(email, msg):
+    '''This is the generic SMTP emailing method (able to be used anywhere)'''
+#    SENDER_EMAIL = "setsystempp@gmail.com"
+    SENDER_PSWD = "setpp_coen174"
+#    SUBJECT = "SET++ Lab Evaluations"
+    smtp_server = "smtp.gmail.com"
+    port = 587
+    context = ssl.create_default_context()
+    with smtplib.SMTP(smtp_server, port) as smtp:   # Opens connection with variable name "server"
+        smtp.ehlo() # Identifies with mail server we are using
+        smtp.starttls(context=context)  # Start encrypting traffic
+        smtp.ehlo()
+        smtp.login(SENDER_EMAIL, SENDER_PSWD)
+        try:
+            smtp.sendmail(SENDER_EMAIL, email, msg)
+        except:
+            print("Error: invalid email")
+
 # STUDENT CLASS
 class Student:
     def __init__(self, id, email, course):
@@ -40,8 +59,8 @@ class Student:
         return message.as_string()
 
     # Function to call on a student to send an email to the student
-    def send_email(self):
-        email(self.email, self.create_message())
+    def send_message(self):
+        send_email(self.email, self.create_message())
 
 def send_all_student_emails():
     '''This is the function that should be called when the survey is started'''
@@ -54,8 +73,10 @@ def send_all_student_emails():
             c_id = removeZeroes(row[c_id_i_roster])
             if s_id and email and c_id:
                 student = Student(s_id, email, c_id)
-                student.send_email()
+                student.send_message()
                 print("Sent email to student {}".format(email))
+
+send_all_student_emails()
 
 # PROFESSOR CLASS
 class Professor:
@@ -75,8 +96,8 @@ class Professor:
         message.attach(MIMEText(body, "plain"))
         return message.as_string()
 
-    def send_email(self):
-        email(self.email, self.create_message())
+    def send_message(self):
+        send_email(self.email, self.create_message())
 
 def send_all_prof_emails():
     '''Function to email all professors'''
@@ -88,26 +109,9 @@ def send_all_prof_emails():
             c_id = removeZeroes(row[c_id_i_results])
             if email and c_id:
                 prof = Professor(email, c_id)
-                prof.send_email()
+                prof.send_message()
                 print("Sent email to professor {} for lab {}".format(email, c_id))
 
-def email(email, msg):
-    '''This is the generic SMTP emailing method (able to be used anywhere)'''
-#    SENDER_EMAIL = "setsystempp@gmail.com"
-    SENDER_PSWD = "setpp_coen174"
-#    SUBJECT = "SET++ Lab Evaluations"
-    smtp_server = "smtp.gmail.com"
-    port = 587
-    context = ssl.create_default_context()
-    with smtplib.SMTP(smtp_server, port) as smtp:   # Opens connection with variable name "server"
-        smtp.ehlo() # Identifies with mail server we are using
-        smtp.starttls(context=context)  # Start encrypting traffic
-        smtp.ehlo()
-        smtp.login(SENDER_EMAIL, SENDER_PSWD)
-        try:
-            smtp.sendmail(SENDER_EMAIL, email, msg)
-        except:
-            print("Error: invalid email")
 
 # password reset email
 def send_password_reset_email(user):
