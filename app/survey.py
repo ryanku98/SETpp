@@ -99,7 +99,7 @@ def removeZeroes(str):
     return str.lstrip('0').rstrip('.0')
 
 def convertToCSV(filename):
-    '''Converts uploaded roster to CSV if Excel file, otherwise simply renames'''
+    """Converts uploaded roster to CSV if Excel file, otherwise simply renames"""
     if not os.path.exists(filename):
         print('File ' + filename + ' not found.')
         return
@@ -133,7 +133,7 @@ class Section:
 
 
     def get_section_stats(self):
-        '''WLL BE CALLED ON INDIVIDUAL SECTIONS'''
+        """WLL BE CALLED ON INDIVIDUAL SECTIONS"""
         df = pd.DataFrame.from_records(self.data)
 
         course_i = 1
