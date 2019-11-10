@@ -11,7 +11,25 @@ from flask import url_for
 from threading import Thread
 from app.survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_file, results_file, studentExists, removeZeroes
 
+SENDER_EMAIL = "setsystempp@gmail.com"
 SURVEY_LINK = "http://localhost:5000/survey"
+SUBJECT = "SET++ Lab Evaluations"
+
+def send_email(email, msg):
+    """This is the generic SMTP emailing method (able to be used anywhere)"""
+    SENDER_PSWD = "setpp_coen174"
+    smtp_server = "smtp.gmail.com"
+    port = 587
+    context = ssl.create_default_context()
+    with smtplib.SMTP(smtp_server, port) as smtp:   # Opens connection with variable name "server"
+        smtp.ehlo() # Identifies with mail server we are using
+        smtp.starttls(context=context)  # Start encrypting traffic
+        smtp.ehlo()
+        smtp.login(SENDER_EMAIL, SENDER_PSWD)
+        try:
+            smtp.sendmail(SENDER_EMAIL, email, msg)
+        except:
+            print("Error: invalid email")
 
 # STUDENT CLASS
 class Student:
@@ -19,10 +37,9 @@ class Student:
         self.id = id
         self.email = email
         self.course = course
-        print(SURVEY_LINK + '?s=' + str(self.id) + '&c=' + str(self.course))
 
     def create_message(self):
-        '''Creates an email message string based on the student'''
+        """Creates an email message string based on the student"""
         stud_msg_template = os.path.join('app', 'templates', 'email', 'studentSurveyLink.txt')
         with open(stud_msg_template, 'r') as file:
             link = SURVEY_LINK
@@ -38,11 +55,11 @@ class Student:
         return message.as_string()
 
     # Function to call on a student to send an email to the student
-    def send_email(self):
-        email(self.email, self.create_message())
+    def send_message(self):
+        send_email(self.email, self.create_message())
 
 def send_all_student_emails():
-    '''This is the function that should be called when the survey is started'''
+    """This is the function that should be called when the survey is started"""
     with open(roster_file, newline='') as csvfile:
         next(csvfile)
         sr = csv.reader(csvfile, delimiter=',')
@@ -52,7 +69,7 @@ def send_all_student_emails():
             c_id = removeZeroes(row[c_id_i_roster])
             if s_id and email and c_id:
                 student = Student(s_id, email, c_id)
-                student.send_email()
+                student.send_message()
                 print("Sent email to student {}".format(email))
 
 # PROFESSOR CLASS
@@ -62,7 +79,7 @@ class Professor:
         self.course = course
 
     def create_message(self):
-        '''Will be pretty similar to one above, pull from the other email template'''
+        """Will be pretty similar to one above, pull from the other email template"""
         prof_msg_template = os.path.join('app', 'templates', 'email', 'professorSurveyStatistics.txt')
         with open(prof_msg_template, 'r') as file:
             body = file.read().format(self.email, SURVEY_LINK)
@@ -73,11 +90,11 @@ class Professor:
         message.attach(MIMEText(body, "plain"))
         return message.as_string()
 
-    def send_email(self):
-        email(self.email, self.create_message())
+    def send_message(self):
+        send_email(self.email, self.create_message())
 
 def send_all_prof_emails():
-    '''Function to email all professors'''
+    """Function to email all professors"""
     with open(results_file, newline='') as csvfile:
         next(csvfile)
         sr = csv.reader(csvfile, delimiter=',')
@@ -86,30 +103,12 @@ def send_all_prof_emails():
             c_id = removeZeroes(row[c_id_i_results])
             if email and c_id:
                 prof = Professor(email, c_id)
-                prof.send_email()
+                prof.send_message()
                 print("Sent email to professor {} for lab {}".format(email, c_id))
-
-def email(email, msg):
-    '''This is the generic SMTP emailing method (able to be used anywhere)'''
-    SENDER_EMAIL = "setsystempp@gmail.com"
-    SENDER_PSWD = "setpp_coen174"
-    SUBJECT = "SET++ Lab Evaluations"
-    smtp_server = "smtp.gmail.com"
-    port = 587
-    context = ssl.create_default_context()
-    with smtplib.SMTP(smtp_server, port) as smtp:   # Opens connection with variable name "server"
-        smtp.ehlo() # Identifies with mail server we are using
-        smtp.starttls(context=context)  # Start encrypting traffic
-        smtp.ehlo()
-        smtp.login(SENDER_EMAIL, SENDER_PSWD)
-        try:
-            smtp.sendmail(SENDER_EMAIL, email, msg)
-        except:
-            print("Error: invalid email")
 
 # password reset email
 def send_password_reset_email(user):
-    '''Evan's password reset function'''
+    """Evan's password reset function"""
     token = user.get_reset_password_token() # generate token for email
     body = "Hello, please follow the link to reset password: " + url_for('resetPassword', token=token, _external=True)
     message = MIMEMultipart()
