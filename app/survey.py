@@ -131,9 +131,12 @@ class Section:
         self.fr_list = []
         self.data = data
 
-
     def get_section_stats(self):
         '''WLL BE CALLED ON INDIVIDUAL SECTIONS'''
+
+        # add first row to self.data
+        
+
         df = pd.DataFrame.from_records(self.data)
 
         course_i = 1
