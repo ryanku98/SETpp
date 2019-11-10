@@ -124,8 +124,8 @@ def convertToCSV(filename):
 # SECTION CLASS
 # TODO: Evan creates a dataframe for parssing through these and sending the stats to the professors
 class Section:
-    __init__(self, course_id, mean_list, std_list, fr_list):
-        self.prof_email
+    def __init__(self, course_id, mean_list, std_list, fr_list):
+        self.prof_email = "a1morales@scu.edu"
         self.mean_list = []
         self.std_list = []
         self.fr_list = []

@@ -11,7 +11,9 @@ from flask import url_for
 from threading import Thread
 from app.survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_file, results_file, studentExists, removeZeroes
 
+SENDER_EMAIL = "setsystempp@gmail.com"
 SURVEY_LINK = "http://localhost:5000/survey"
+SUBJECT = "SET++ Lab Evaluations"
 
 # STUDENT CLASS
 class Student:
@@ -91,9 +93,9 @@ def send_all_prof_emails():
 
 def email(email, msg):
     '''This is the generic SMTP emailing method (able to be used anywhere)'''
-    SENDER_EMAIL = "setsystempp@gmail.com"
+#    SENDER_EMAIL = "setsystempp@gmail.com"
     SENDER_PSWD = "setpp_coen174"
-    SUBJECT = "SET++ Lab Evaluations"
+#    SUBJECT = "SET++ Lab Evaluations"
     smtp_server = "smtp.gmail.com"
     port = 587
     context = ssl.create_default_context()
