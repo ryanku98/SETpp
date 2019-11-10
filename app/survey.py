@@ -121,29 +121,31 @@ def convertToCSV(filename):
         # rename to proper roster filename
         os.rename(filename, roster_file)
 
-def analyze_data(section_data):
-    '''WLL BE CALLED ON INDIVIDUAL SECTIONS'''
-    df = pd.DataFrame.from_records(section_data)
-    means = []; stds = []; frs = [] # means, standard deviations, free responses
-
-    # for question in section_data:
-    #    means.append(question.mean)
-
-    question_i = 2
-    fr_ids = [6, 7, 13, 17, 21]
-
-    for i in range(question_i, len(section_data)):
-        if (i in fr_ids):
-            frs.append(section_data[i])
-        else:
-            means.append(df[section_data[i]].mean())
-            stds.append(df[section_data[i]].std())
-
-
 # SECTION CLASS
+# TODO: Evan creates a dataframe for parssing through these and sending the stats to the professors
 class Section:
-    __init__(self, course_id):
+    __init__(self, course_id, mean_list, std_list, fr_list):
         self.prof_email
         self.mean_list = []
         self.std_list = []
         self.fr_list = []
+
+
+    def get_section_stats(self):
+        '''WLL BE CALLED ON INDIVIDUAL SECTIONS'''
+        df = pd.DataFrame.from_records(section_data)
+
+        course_i = 1
+        question_i = 2
+        fr_ids = [6, 7, 13, 17, 21]
+
+        course = section_data[course_i]
+
+        for i in range(question_i, len(section_data)):
+            if (i in fr_ids):
+                fr_list.append(section_data[i])
+            else:
+                mean_list.append(df[section_data[i]].mean())
+                std_list.append(df[section_data[i]].std())
+
+        return section_stats
