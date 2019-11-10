@@ -124,16 +124,17 @@ def convertToCSV(filename):
 # SECTION CLASS
 # TODO: Evan creates a dataframe for parssing through these and sending the stats to the professors
 class Section:
-    def __init__(self, course_id, mean_list, std_list, fr_list):
+    def __init__(self, course_id, data):
         self.prof_email = "a1morales@scu.edu"
         self.mean_list = []
         self.std_list = []
         self.fr_list = []
+        self.data = data
 
 
     def get_section_stats(self):
         '''WLL BE CALLED ON INDIVIDUAL SECTIONS'''
-        df = pd.DataFrame.from_records(section_data)
+        df = pd.DataFrame.from_records(self.data)
 
         course_i = 1
         question_i = 2
