@@ -114,7 +114,8 @@ def send_all_prof_emails():
                 course_id = df[prev_index][1]
 
                 section_data = Section(course_id, df[prev_index:index])
-                print(section_data.std_list)
+                section_data.get_section_stats()
+                print(section_data.mean_list)
 
 
                 prof = Professor(email_addr, course_id)
@@ -123,7 +124,7 @@ def send_all_prof_emails():
                 prev_index = index
                 print("\n\n")
 
-                
+
 # password reset email
 def send_password_reset_email(user):
     """Evan's password reset function"""
