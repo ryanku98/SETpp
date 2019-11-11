@@ -1,5 +1,6 @@
 from datetime import datetime
 from app import app, db, login
+from flask import flash
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from time import time
@@ -44,13 +45,36 @@ class Deadline(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     datetime = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
+    def update_datetime(self, dt):
+        # assume entered dt is valid
+        self.datetime = dt
+
+    def __str__(self):
+        return self.datetime.strftime('%Y-%m-%dT%H:%M')
+
     def __repr__(self):
-        return '<Deadline {}>'.format(self.datetime.strftime('%m/%d/%Y %H:%M'))
+        return '<Deadline {}>'.format(str(self))
 
 class Reminder(db.Model):
     """Defines the Reminder database model - for this application, at most 3 Reminders should exist at any given time"""
     id = db.Column(db.Integer, primary_key=True)
     datetime = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
+    def update_datetime(self, dt):
+        # assume entered dt is valid
+        self.datetime = dt
+
+    def __str__(self):
+        return self.datetime.strftime('%Y-%m-%dT%H:%M')
+
     def __repr__(self):
-        return '<Reminder {}>'.format(self.datetime.strftime('%m/%d/%Y %H:%M'))
+        return '<Reminder {}>'.format(str(self))
+
+def create_reminders(datetimes):
+    """Add and commit reminders created from accepted list of datetime objects to the database"""
+    Reminder.query.delete()
+    for dt in datetimes:
+        reminder = Reminder(datetime=dt)
+        db.session.add(reminder)
+        flash('Reminder set for ' + str(reminder))
+    db.session.commit()

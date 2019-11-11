@@ -6,7 +6,7 @@ from app.forms import LoginForm, RegistrationForm, ResetPasswordForm, RequestPas
 from app.forms import is_valid_datetime
 from datetime import datetime
 
-from app.models import User
+from app.models import User, Deadline, Reminder, create_reminders
 from app.survey import submitResult, roster_file, clearSurveySession, convertToCSV, studentExists
 from app.emails import send_password_reset_email, send_all_student_emails
 # from werkzeug.urls import url_parse
@@ -124,7 +124,6 @@ def createSurvey():
         f_roster = convertToCSV(os.path.join('documents', filename))
         flash('File uploaded!')
         # TODO: set default survey deadline to a week from upload in case admin doesn't custom input deadline
-        # TODO: do we want default reminders?
         return redirect(url_for('deadline'))
     return render_template('createSurvey.html', form=form)
 
@@ -134,19 +133,61 @@ def setDates():
     if not current_user.is_authenticated:
         flash('Login to set reminders!')
         return redirect(url_for('login'))
+
+    form = DatesForm()
     # track time on page load for validation purposes
     curr_time = datetime.utcnow()
-    form = DatesForm()
+
     if form.validate_on_submit():
-        flash('Deadline set for ' + form.deadline.data.strftime(form.display_format))
+        # DatesForm class validates deadline data upon submission
+        deadline = Deadline.query.first()
+        # if a deadline already exists
+        # NOTE: a deadline should always exist, but this is a failsafe to avoid extraneous/unforeseen errors
+        if deadline is not None:
+            deadline.update_datetime(form.deadline.data)
+        else:
+            db.session.add(Deadline(datetime=form.deadline.data))
+        flash('Deadline set for ' + str(deadline))
+        db.session.commit()
+
+        # add valid reminders to 'reminders' set (should be datetime objects)
+        reminders = set()
+        # reminder flash messages handled by create_reminders()
         if is_valid_datetime(form.reminder1.data, curr_time):
-            flash('Reminder 1 set for ' + form.reminder1.data.strftime(form.display_format))
+            reminders.add(form.reminder1.data)
         if is_valid_datetime(form.reminder2.data, curr_time):
-            flash('Reminder 2 set for ' + form.reminder2.data.strftime(form.display_format))
+            reminders.add(form.reminder2.data)
         if is_valid_datetime(form.reminder3.data, curr_time):
-            flash('Reminder 3 set for ' + form.reminder3.data.strftime(form.display_format))
+            reminders.add(form.reminder3.data)
+        # add and commit 'reminders' set to database
+        create_reminders(reminders)
         return redirect(url_for('setDates'))
-    return render_template('dates.html', form=form, time=curr_time)
+    return render_template('dates.html', form=form, time=curr_time, defaults=create_defaults(curr_time))
+
+def create_defaults(curr_time):
+    """Creates list of datetime strings using values currently in database - for values that don't exist, use current time"""
+    # defaults should be a list of defaults for variables in proper string form in the following order: deadline, reminder1, reminder2, reminder3
+    default_format = '%Y-%m-%dT%H:%M'
+    defaults = []
+    deadline = Deadline.query.first()
+    if deadline is not None:
+        defaults.append(str(deadline))
+    else:
+        defaults.append(curr_time.strftime(default_format))
+    myquery = Reminder.query.all()
+    if len(myquery) >= 1:
+        defaults.append(str(myquery[0]))
+    else:
+        defaults.append(curr_time.strftime(default_format))
+    if len(myquery) >= 2:
+        defaults.append(str(myquery[1]))
+    else:
+        defaults.append(curr_time.strftime(default_format))
+    if len(myquery) >= 3:
+        defaults.append(str(myquery[2]))
+    else:
+        defaults.append(curr_time.strftime(default_format))
+    return defaults
 
 @app.route('/survey', methods=['GET', 'POST'])
 def survey():

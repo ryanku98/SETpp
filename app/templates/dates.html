@@ -9,24 +9,25 @@
   {# NOTE: type="datetime-local" is not recognized by Safari on MAC OSX, but is recognized by Safari on iOS :/ #}
   <p>
     {{ form.deadline.label }}<br>
-    {{ form.deadline(type="datetime-local", value=time.strftime(form.default_format)) }}<br>
+    {{ form.deadline(value=defaults[0]) }}<br>
     {% for error in form.deadline.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
   </p>
   <p>
     {{ form.reminder1.label }}<br>
-    {{ form.reminder1(type="datetime-local", value=time.strftime(form.default_format)) }}<br>
+    {{ form.reminder1(value=defaults[1]) }}<br>
     {% for error in form.reminder1.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
   </p>
   <p>
     {{ form.reminder2.label }}<br>
-    {{ form.reminder2(type="datetime-local", value=time.strftime(form.default_format)) }}<br>
+    {{ form.reminder2(value=defaults[2]) }}<br>
     {% for error in form.reminder2.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
   </p>
   <p>
     {{ form.reminder3.label }}<br>
-    {{ form.reminder3(type="datetime-local", value=time.strftime(form.default_format)) }}<br>
+    {{ form.reminder3(value=defaults[3]) }}<br>
     {% for error in form.reminder3.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
   </p>
+  <p>Reminders set before the current time will be ignored.</p>
   <p>
     {{ form.submit() }}
   </p>
