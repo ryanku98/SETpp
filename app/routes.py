@@ -4,7 +4,7 @@ from app import app, db
 from app.forms import UploadForm, LoginForm, RegistrationForm, ResetPasswordForm, RequestPasswordResetForm, ChangePasswordForm, SurveyForm
 from app.models import User
 from app.survey import submitResult, roster_file, clearSurveySession, convertToCSV, studentExists
-from app.emails import send_password_reset_email, send_all_student_emails
+from app.emails import send_password_reset_email, send_all_student_emails, send_all_prof_emails
 # from werkzeug.urls import url_parse
 from werkzeug.utils import secure_filename
 import os
@@ -121,6 +121,12 @@ def upload():
         flash('File uploaded!')
         return redirect(url_for('upload'))
     return render_template('upload.html', form=form)
+
+@app.route('/sendAnalytics')
+def sendAnalytics():
+    send_all_prof_emails()
+    flash('Analytics Sent')
+    return redirect(url_for('index'))
 
 @app.route('/startsurvey')
 @login_required
