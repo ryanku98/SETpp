@@ -133,21 +133,27 @@ class Section:
         self.std_list = []
         self.fr_list = []
         self.data = data
+        self.course_id = course_id
 
     def get_section_stats(self):
         """WLL BE CALLED ON INDIVIDUAL SECTIONS"""
-        self.data.insert(0, headers) # add first row to self.data
+        # self.data.insert(0, headers) # add first row to self.data
 
         df = pd.DataFrame.from_records(self.data)
         course_i = 1
         question_i = 2
         fr_ids = [6, 7, 13, 17, 21]
 
-    #    course = section_data[course_i]
-
-        for i in range(question_i, len(self.data)):
+        # print(df)
+        for i in range(question_i, len(self.data[0])):
             if (i in fr_ids):
-                self.fr_list.append(self.data[i])
+                self.fr_list.append(df[i].values)
             else:
-                self.mean_list.append(df[self.data[i]].mean())
-                self.std_list.append(df[self.data[i]].std())
+                self.mean_list.append( pd.to_numeric(df[i]).mean() )
+                self.std_list.append( pd.to_numeric(df[i]).std() )
+
+# data = [['eejohnson@scu.edu',83505,1,1,1,1,'asdf','asdf',1,1,1,1,1,'asdf',1,1,1,'asdf',2.5,2.5,2.5,'asdf'],
+# ['eejohnson@scu.edu',83505,2,1,1,1,'asdf','asdf',1,1,1,1,1,'asdf',1,1,1,'asdf',2.5,2.5,2.5,'asdf']]
+# sect = Section(83505,data)
+# sect.get_section_stats()
+# print(sect.fr_list)

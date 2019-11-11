@@ -75,15 +75,16 @@ def send_all_student_emails():
 
 # PROFESSOR CLASS
 class Professor:
-    def __init__(self, email, course):
+    def __init__(self, email, course, section):
         self.email = email
         self.course = course
+        self.section = section
 
     def create_message(self):
         """Will be pretty similar to one above, pull from the other email template"""
         prof_msg_template = os.path.join('app', 'templates', 'email', 'professorSurveyStatistics.txt')
         with open(prof_msg_template, 'r') as file:
-            body = file.read().format(self.email, SURVEY_LINK)
+            body = file.read().format(self.email, self.section.mean_list, self.section.std_list, self.section.fr_list)
         message = MIMEMultipart()
         message["From"] = SENDER_EMAIL
         message["To"] = self.email
@@ -104,25 +105,23 @@ def send_all_prof_emails():
         for row in sr:
             df.append(row)
         df = sorted(df, key=lambda x: x[1])
-
+        print(df)
         prev_id = -1
         prev_index = 0
         for index,row in enumerate(df):
-            print(str(prev_id)+" "+str(prev_index))
             if row[1] != prev_id and len(df[prev_index:index]) != 0:
                 email_addr = df[prev_index][0]
                 course_id = df[prev_index][1]
 
                 section_data = Section(course_id, df[prev_index:index])
                 section_data.get_section_stats()
-                print(section_data.mean_list)
 
-
-                prof = Professor(email_addr, course_id)
-                # prof.send_message()
-                prev_id = row[1]
+                prof = Professor(email_addr, course_id, section_data)
+                prof.create_message()
+                prof.send_message()
                 prev_index = index
                 print("\n\n")
+            prev_id = row[1]
 
 
 # password reset email

@@ -1,3 +1,5 @@
 Hello {},
 Here are you TA's teaching results:
-{}
+mean: {}
+stds: {}
+free responses: {}
