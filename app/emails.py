@@ -9,7 +9,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from flask import url_for
 from threading import Thread
-from app.survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_file, results_file, studentExists, removeZeroes
+from survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_file, results_file, studentExists, removeZeroes, Section
 
 SENDER_EMAIL = "setsystempp@gmail.com"
 SURVEY_LINK = "http://localhost:5000/survey"
@@ -21,6 +21,7 @@ def send_email(email, msg):
     smtp_server = "smtp.gmail.com"
     port = 587
     context = ssl.create_default_context()
+    print("Sending mail to "+str(email))
     with smtplib.SMTP(smtp_server, port) as smtp:   # Opens connection with variable name "server"
         smtp.ehlo() # Identifies with mail server we are using
         smtp.starttls(context=context)  # Start encrypting traffic
@@ -91,21 +92,36 @@ class Professor:
         return message.as_string()
 
     def send_message(self):
-        send_email(self.email, self.create_message())
+        Thread( target = send_email, args = (self.email, self.create_message()) ).start()
 
 def send_all_prof_emails():
-    """Function to email all professors"""
+    '''Function to email all professors'''
     with open(results_file, newline='') as csvfile:
-        next(csvfile)
-        sr = csv.reader(csvfile, delimiter=',')
+        for i in range(20):
+            next(csvfile)
+        sr = csv.reader(csvfile, delimiter=',', quotechar='|')
+        df = []
         for row in sr:
-            email = row[prof_email_i_results]
-            c_id = removeZeroes(row[c_id_i_results])
-            if email and c_id:
-                prof = Professor(email, c_id)
-                prof.send_message()
-                print("Sent email to professor {} for lab {}".format(email, c_id))
+            df.append(row)
+        df = sorted(df, key=lambda x: x[1])
 
+        prev_id = -1
+        prev_index = 0
+        for index,row in enumerate(df):
+            print(str(prev_id)+" "+str(prev_index))
+            if row[1] != prev_id and len(df[prev_index:index]) != 0:
+                email_addr = df[prev_index][0]
+                course_id = df[prev_index][1]
+
+                section_data = Section(course_id, df[prev_index:index])
+                print(section_data.std_list)
+
+
+                prof = Professor(email_addr, course_id)
+                # prof.send_message()
+                prev_id = row[1]
+                prev_index = index
+                print("\n\n")
 # password reset email
 def send_password_reset_email(user):
     """Evan's password reset function"""
@@ -117,4 +133,7 @@ def send_password_reset_email(user):
     message["Subject"] = "Password Reset Request"
     message.attach(MIMEText(body, "plain"))
     msg = message.as_string()
-    Thread(target = send_email, args = (message['To'], msg)).start()
+    Thread( target = send_email, args = (message['To'], msg) ).start()
+
+
+send_all_prof_emails()
