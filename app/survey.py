@@ -136,23 +136,18 @@ class Section:
 
     def get_section_stats(self):
         """WLL BE CALLED ON INDIVIDUAL SECTIONS"""
-
-        # add first row to self.data
-        self.data.insert(0, headers)
+        self.data.insert(0, headers) # add first row to self.data
 
         df = pd.DataFrame.from_records(self.data)
-
         course_i = 1
         question_i = 2
         fr_ids = [6, 7, 13, 17, 21]
 
-        course = section_data[course_i]
+    #    course = section_data[course_i]
 
-        for i in range(question_i, len(section_data)):
+        for i in range(question_i, len(self.data)):
             if (i in fr_ids):
-                self.fr_list.append(section_data[i])
+                self.fr_list.append(self.data[i])
             else:
-                self.mean_list.append(df[section_data[i]].mean())
-                self.std_list.append(df[section_data[i]].std())
-
-        return self
+                self.mean_list.append(df[self.data[i]].mean())
+                self.std_list.append(df[self.data[i]].std())
