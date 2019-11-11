@@ -2,8 +2,6 @@
 
 {% block content %}
 <h1>home page here</h1>
-<a href="{{ url_for('startSurvey') }}">Start survey session</a>
-<a href="{{ url_for('sendReminder') }}">Send reminder</a>
-<a href="{{ url_for('upload') }}">Upload roster</a>
+<a href="{{ url_for('createSurvey') }}">Create new survey session</a>
 <p>Clicking "start survey session" sends out emails to students on the roster</p>
 {% endblock %}

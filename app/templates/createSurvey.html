@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>create survey page</h1>
+<form action="" method="post" enctype="multipart/form-data" novalidate>
+  {{ form.hidden_tag() }}
+  <p>
+    Please note that only .csv, .xlsx, and .xls files will be accepted.<br>
+    Uploading a new roster also wipes old survey data.<br>
+    {{ form.roster() }}
+  </p>
+  <p>
+    {{ form.submit() }}
+  </p>
+</form>
+{% endblock %}

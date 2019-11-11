@@ -2,11 +2,12 @@ from datetime import datetime
 from app import app, db, login
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-import jwt
 from time import time
+import jwt
 
 # inherits from db.Model, a base class for all models in Flask-SQLAlchemy
 class User(UserMixin, db.Model):
+    """Defines the User database model - for this instance, at most 1 User should exist at any given time"""
     # defines fields as class variables, or instances of db.Column class, taking field type as an argument
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), index=True, unique=True)
@@ -31,11 +32,25 @@ class User(UserMixin, db.Model):
             return
         return User.query.get(id)
 
-
-
     def __repr__(self):
         return '<User {}>'.format(self.email)
 
 @login.user_loader
 def load_user(id):
     return User.query.get(int(id))
+
+class Deadline(db.Model):
+    """Defines the Deadline database model - for this instance, at most 1 Deadline should exist at any given time"""
+    id = db.Column(db.Integer, primary_key=True)
+    datetime = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+
+    def __repr__(self):
+        return '<Deadline {}>'.format(self.datetime.strftime('%m/%d/%Y %H:%M'))
+
+class Reminder(db.Model):
+    """Defines the Reminder database model - for this application, at most 3 Reminders should exist at any given time"""
+    id = db.Column(db.Integer, primary_key=True)
+    datetime = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+
+    def __repr__(self):
+        return '<Reminder {}>'.format(self.datetime.strftime('%m/%d/%Y %H:%M'))

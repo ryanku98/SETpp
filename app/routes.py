@@ -1,7 +1,11 @@
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import current_user, login_user, logout_user, login_required
 from app import app, db
-from app.forms import UploadForm, LoginForm, RegistrationForm, ResetPasswordForm, RequestPasswordResetForm, ChangePasswordForm, SurveyForm
+from app.forms import LoginForm, RegistrationForm, ResetPasswordForm, RequestPasswordResetForm, ChangePasswordForm, CreateSurveyForm, DatesForm, SurveyForm
+# CHANGE WHEN FUNCTION IS MOVED:
+from app.forms import is_valid_datetime
+from datetime import datetime
+
 from app.models import User
 from app.survey import submitResult, roster_file, clearSurveySession, convertToCSV, studentExists
 from app.emails import send_password_reset_email, send_all_student_emails
@@ -104,12 +108,12 @@ def requestResetPassword():
         return redirect(url_for('login'))
     return render_template('requestPasswordReset.html', title='Reset Password', form=form)
 
-@app.route('/upload', methods=['GET', 'POST'])
-def upload():
+@app.route('/createsurvey', methods=['GET', 'POST'])
+def createSurvey():
     if not current_user.is_authenticated:
-        flash('Login to view admin page!')
+        flash('Login to create survey!')
         return redirect(url_for('login'))
-    form = UploadForm()
+    form = CreateSurveyForm()
     if form.validate_on_submit():
         # clear old roster and results
         clearSurveySession()
@@ -119,22 +123,30 @@ def upload():
         # convert to CSV if Excel file
         f_roster = convertToCSV(os.path.join('documents', filename))
         flash('File uploaded!')
-        return redirect(url_for('upload'))
-    return render_template('upload.html', form=form)
+        # TODO: set default survey deadline to a week from upload in case admin doesn't custom input deadline
+        # TODO: do we want default reminders?
+        return redirect(url_for('deadline'))
+    return render_template('createSurvey.html', form=form)
 
-@app.route('/startsurvey')
-@login_required
-def startSurvey():
-    flash('Survey session started')
-    send_all_student_emails()
-    return redirect(url_for('index'))
-
-@app.route('/sendreminder')
-@login_required
-def sendReminder():
-    flash('Email reminders sent')
-    send_all_student_emails()
-    return redirect(url_for('index'))
+@app.route('/deadline', methods=['GET', 'POST'])
+def setDates():
+    """Set survey deadline and optional student reminders for a survey session"""
+    if not current_user.is_authenticated:
+        flash('Login to set reminders!')
+        return redirect(url_for('login'))
+    # track time on page load for validation purposes
+    curr_time = datetime.utcnow()
+    form = DatesForm()
+    if form.validate_on_submit():
+        flash('Deadline set for ' + form.deadline.data.strftime(form.display_format))
+        if is_valid_datetime(form.reminder1.data, curr_time):
+            flash('Reminder 1 set for ' + form.reminder1.data.strftime(form.display_format))
+        if is_valid_datetime(form.reminder2.data, curr_time):
+            flash('Reminder 2 set for ' + form.reminder2.data.strftime(form.display_format))
+        if is_valid_datetime(form.reminder3.data, curr_time):
+            flash('Reminder 3 set for ' + form.reminder3.data.strftime(form.display_format))
+        return redirect(url_for('setDates'))
+    return render_template('dates.html', form=form, time=curr_time)
 
 @app.route('/survey', methods=['GET', 'POST'])
 def survey():
@@ -143,8 +155,8 @@ def survey():
         s_id = request.args.get('s')
         c_id = request.args.get('c')
         # pre-fill student ID and course # if valid (avoids accidental tampering)
-        # also avoids false presumption by user that prefilled data must be accurate
-        if studentExists(s_id, c_id):
+        # also avoids false presumption by user that prefilled data MUST be accurate
+        if s_id and c_id and studentExists(s_id, c_id):
             form.student_id.data = s_id
             form.course_id.data = c_id
     if form.validate_on_submit():

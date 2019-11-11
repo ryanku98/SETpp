@@ -1,13 +1,40 @@
 from flask_wtf import FlaskForm
-from wtforms import FileField, StringField, PasswordField, BooleanField, SubmitField, IntegerField, RadioField, TextAreaField
+from wtforms import FileField, StringField, PasswordField, BooleanField, SubmitField, IntegerField, RadioField, TextAreaField #, DateTimeField
+from wtforms.ext.dateutil.fields import DateTimeField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 from flask_wtf.file import FileRequired, FileAllowed
 from app.models import User
 from app.survey import studentExists
+# CHANGE WHEN FUNCTION IS MOVED:
+# from app.routes import is_valid_datetime
 
-class UploadForm(FlaskForm):
-    roster = FileField(validators=[FileRequired(), FileAllowed(['csv', 'xlsx', 'xls'], 'CSV/Excel files only!')])
-    submit = SubmitField('Upload')
+# TODO: move this to survey.py after data analysis feature is done
+# CHANGE in app.routes setDates?
+# CHANGE in app.forms DatesForm validation
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+def is_valid_datetime(dt1, dt2):
+    """Returns True if dt1 is strictly after dt2 - False otherwise"""
+    # at least one attribute of delta is positive iff dt1 is in fact after dt2 (non-positive attributes are 0)
+    # all attributes of delta are 0 iff dt1 is identical to dt2
+    # at least one attribute of delta is negative iff dt1 is before dt2 (non-negative attributes are 0)
+    delta = relativedelta(dt1, dt2)
+    # test for negativity in attributes:
+    # first assume invalid
+    # if hit positive value, set flag to True but continue to end
+    # if hit negative value, return False immediately and unconditionally
+    # if/when reached end, return flag (if all 0s, flag remains False)
+    validity = False
+    delta_attributes = [delta.years, delta.months, delta.weeks, delta.days, delta.hours, delta.minutes, delta.seconds, delta.microseconds]
+    # delta_attributes = [delta.years, delta.months, delta.weeks, delta.days, delta.hours, delta.minutes]
+    for attribute in delta_attributes:
+        # if positive
+        if attribute > 0:
+            validity = True
+        # if negative
+        elif attribute < 0:
+            return False
+    return validity
 
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired()])
@@ -27,6 +54,7 @@ class RegistrationForm(FlaskForm):
     def validate_email(self, email):
         if User.query.count() != 0:
             raise ValidationError('An admin already exists for this system.')
+
 class ChangePasswordForm(FlaskForm):
     current_password = PasswordField('Current Password', validators=[DataRequired()])
     password = PasswordField('New Password', validators=[DataRequired()])
@@ -41,6 +69,26 @@ class ResetPasswordForm(FlaskForm):
 class RequestPasswordResetForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Reset')
+
+class CreateSurveyForm(FlaskForm):
+    roster = FileField(validators=[FileRequired(), FileAllowed(['csv', 'xlsx', 'xls'], 'CSV/Excel files only!')])
+    submit = SubmitField('Create')
+
+class DatesForm(FlaskForm):
+    parse_kwargs = {'yearfirst': True, 'dayfirst': False}
+    display_format = '%m/%d/%Y %H:%M'
+    # used in dates.html for default value
+    default_format = '%Y-%m-%dT%H:%M'
+    deadline = DateTimeField('Survey deadline', parse_kwargs=parse_kwargs, display_format=display_format, validators=[DataRequired()])
+    reminder1 = DateTimeField('First student reminder (optional)', parse_kwargs=parse_kwargs, display_format=display_format)
+    reminder2 = DateTimeField('Second student reminder (optional)', parse_kwargs=parse_kwargs, display_format=display_format)
+    reminder3 = DateTimeField('Third student reminder (optional)', parse_kwargs=parse_kwargs, display_format=display_format)
+    submit = SubmitField('Save')
+
+    def validate_deadline(self, deadline):
+        # compare submitted deadline to current time
+        if not is_valid_datetime(self.deadline.data, datetime.utcnow()):
+            raise ValidationError('Invalid deadline: make sure to set a deadline after the current time')
 
 class SurveyForm(FlaskForm):
     # SUBMISSION VALIDATION
