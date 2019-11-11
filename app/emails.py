@@ -122,6 +122,8 @@ def send_all_prof_emails():
                 prev_id = row[1]
                 prev_index = index
                 print("\n\n")
+
+                
 # password reset email
 def send_password_reset_email(user):
     """Evan's password reset function"""
