@@ -150,9 +150,9 @@ class Section:
 
         for i in range(question_i, len(section_data)):
             if (i in fr_ids):
-                fr_list.append(section_data[i])
+                self.fr_list.append(section_data[i])
             else:
-                mean_list.append(df[section_data[i]].mean())
-                std_list.append(df[section_data[i]].std())
+                self.mean_list.append(df[section_data[i]].mean())
+                self.std_list.append(df[section_data[i]].std())
 
         return self
