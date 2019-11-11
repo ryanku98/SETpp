@@ -117,4 +117,4 @@ def send_password_reset_email(user):
     message["Subject"] = "Password Reset Request"
     message.attach(MIMEText(body, "plain"))
     msg = message.as_string()
-    Thread( target = email, args = (message['To'], msg) ).start()
+    Thread(target = send_email, args = (message['To'], msg)).start()

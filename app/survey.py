@@ -155,4 +155,4 @@ class Section:
                 mean_list.append(df[section_data[i]].mean())
                 std_list.append(df[section_data[i]].std())
 
-        return section_stats
+        return self
