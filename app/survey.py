@@ -129,6 +129,7 @@ def convertToCSV(filename):
 class Section:
     def __init__(self, course_id, data):
         self.prof_email = "a1morales@scu.edu"
+        self.course_id = course_id
         self.mean_list = []
         self.std_list = []
         self.fr_list = []
@@ -142,8 +143,6 @@ class Section:
         course_i = 1
         question_i = 2
         fr_ids = [6, 7, 13, 17, 21]
-
-    #    course = section_data[course_i]
 
         for i in range(question_i, len(self.data)):
             if (i in fr_ids):
