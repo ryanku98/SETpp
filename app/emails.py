@@ -9,7 +9,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from flask import url_for
 from threading import Thread
-from app.survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, fr_ids, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_file, results_file, studentExists, removeZeroes, Section, HEADERS
+from app.survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, fr_ids, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_file, results_file, getResultsHeaders, studentExists, removeZeroes, Section
 
 SENDER_EMAIL = "setsystempp@gmail.com"
 SURVEY_LINK = "http://localhost:5000/survey"
@@ -80,14 +80,15 @@ def format_stats(email, course, mean_list, std_list, fr_list):
     means = ""; stds = ""; frs = ""
     stats.append(email)
     stats.append(course)
+    headers = getResultsHeaders()
     for m in range(2, len(mean_list)):
         if (m not in fr_ids):
-            means += "- Mean for question \'{}\': {}\n".format(HEADERS[m], mean_list[m])
+            means += "- Mean for question \'{}\': {}\n".format(headers[m], mean_list[m])
     for m in range(2, len(std_list)):
         if (m not in fr_ids):
-            stds += "- Standard deviation for question \'{}\': {}\n".format(HEADERS[m], std_list[m])
+            stds += "- Standard deviation for question \'{}\': {}\n".format(headers[m], std_list[m])
     for m in range(2, len(fr_list)):
-        frs += "- Answer for free response question \'{}\': {}\n".format(HEADERS[fr_ids[m]], fr_list)
+        frs += "- Answer for free response question \'{}\': {}\n".format(headers[fr_ids[m]], fr_list)
     stats.append(means)
     stats.append(stds)
     stats.append(frs)
@@ -122,8 +123,8 @@ class Professor:
 def send_all_prof_emails():
     """Function to email all professors"""
     with open(results_file, newline='') as csvfile:
-        for i in range(20):
-            next(csvfile)
+        # skip header row
+        next(csvfile)
         sr = csv.reader(csvfile, delimiter=',', quotechar='|')
         df = []
         for row in sr:
@@ -132,7 +133,7 @@ def send_all_prof_emails():
         print(df)
         prev_id = -1
         prev_index = 0
-        for index,row in enumerate(df):
+        for index, row in enumerate(df):
             if row[1] != prev_id and len(df[prev_index:index]) != 0:
                 email_addr = df[prev_index][0]
                 course_id = df[prev_index][1]
@@ -144,9 +145,8 @@ def send_all_prof_emails():
                 prof.create_message()
                 prof.send_message()
                 prev_index = index
-                print("\n\n")
+                print("\n")
             prev_id = row[1]
-
 
 # password reset email
 def send_password_reset_email(user):
@@ -160,6 +160,5 @@ def send_password_reset_email(user):
     message.attach(MIMEText(body, "plain"))
     msg = message.as_string()
     Thread( target = send_email, args = (message['To'], msg) ).start()
-
 
 # send_all_prof_emails()
