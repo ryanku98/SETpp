@@ -57,7 +57,7 @@ class Student:
 
     # Function to call on a student to send an email to the student
     def send_message(self):
-        send_email(self.email, self.create_message())
+        Thread( target = send_email, args = (self.email, self.create_message()) ).start()
 
 def send_all_student_emails():
     """This is the function that should be called when the survey is started"""
@@ -162,4 +162,4 @@ def send_password_reset_email(user):
     Thread( target = send_email, args = (message['To'], msg) ).start()
 
 
-send_all_prof_emails()
+# send_all_prof_emails()
