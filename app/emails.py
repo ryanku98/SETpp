@@ -138,6 +138,8 @@ def send_all_prof_emails():
                 email_addr = df[prev_index][0]
                 course_id = df[prev_index][1]
 
+                # print("RANGE "+str(prev_index)+" "+str(index))
+                # print(prev_id)
                 section_data = Section(course_id, df[prev_index:index])
                 section_data.get_section_stats()
 
@@ -147,6 +149,13 @@ def send_all_prof_emails():
                 prev_index = index
                 print("\n")
             prev_id = row[1]
+
+        email_addr = df[prev_index][0]
+        course_id = df[prev_index][1]
+        # print("RANGE "+str(prev_index)+" "+str(len(df)))
+        # print(prev_id)
+        section_data = Section(course_id, df[prev_index:len(df)])
+        section_data.get_section_stats()
 
 # password reset email
 def send_password_reset_email(user):
@@ -161,4 +170,4 @@ def send_password_reset_email(user):
     msg = message.as_string()
     Thread( target = send_email, args = (message['To'], msg) ).start()
 
-# send_all_prof_emails()
+send_all_prof_emails()
