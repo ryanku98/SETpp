@@ -9,7 +9,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from flask import url_for
 from threading import Thread
-from survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_file, results_file, studentExists, removeZeroes, Section
+from survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_file, results_file, studentExists, removeZeroes, Section, HEADERS
 
 SENDER_EMAIL = "setsystempp@gmail.com"
 SURVEY_LINK = "http://localhost:5000/survey"
@@ -73,17 +73,40 @@ def send_all_student_emails():
                 student.send_message()
                 print("Sent email to student {}".format(email))
 
+
+def format_stats(email, course, mean_list, std_list, fr_list):
+    """format the lists into a string block to email out"""
+    stats = [] # must be length 5
+    means = ""; stds = ""; frs = ""
+    stats.append(email)
+    stats.append(course)
+    for m in range(2, len(mean_list)):
+        means += "Mean for question \'{}\': {}\n".format(HEADERS[m], mean_list[m])
+    for m in range(2, len(std_list)):
+        stds += "Standard deviation for question \'{}\': {}\n".format(HEADERS[m], std_list[m])
+    for m in range(2, len(fr_list)):
+        frs += "Answer for free response question \'{}\': {}\n".format(HEADERS[m], fr_list)
+    stats.append(means)
+    stats.append(stds)
+    stats.append(frs)
+    return stats
+
+
 # PROFESSOR CLASS
 class Professor:
-    def __init__(self, email, course):
+    def __init__(self, email, course, section): # email, course id, Section class
         self.email = email
         self.course = course
+        self.section = section
+
 
     def create_message(self):
         """Will be pretty similar to one above, pull from the other email template"""
         prof_msg_template = os.path.join('app', 'templates', 'email', 'professorSurveyStatistics.txt')
         with open(prof_msg_template, 'r') as file:
-            body = file.read().format(self.email, SURVEY_LINK)
+            stats = format_stats(self.email, self.course, self.section.mean_list, self.section.std_list, self.section.fr_list)
+            body = file.read().format(*stats)
+
         message = MIMEMultipart()
         message["From"] = SENDER_EMAIL
         message["To"] = self.email
@@ -95,7 +118,7 @@ class Professor:
         Thread( target = send_email, args = (self.email, self.create_message()) ).start()
 
 def send_all_prof_emails():
-    '''Function to email all professors'''
+    """Function to email all professors"""
     with open(results_file, newline='') as csvfile:
         for i in range(20):
             next(csvfile)
@@ -104,26 +127,25 @@ def send_all_prof_emails():
         for row in sr:
             df.append(row)
         df = sorted(df, key=lambda x: x[1])
-
+        print(df)
         prev_id = -1
         prev_index = 0
         for index,row in enumerate(df):
-            print(str(prev_id)+" "+str(prev_index))
             if row[1] != prev_id and len(df[prev_index:index]) != 0:
                 email_addr = df[prev_index][0]
                 course_id = df[prev_index][1]
 
                 section_data = Section(course_id, df[prev_index:index])
-                print(section_data.std_list)
+                section_data.get_section_stats()
 
-
-                prof = Professor(email_addr, course_id)
-                # prof.send_message()
-                prev_id = row[1]
+                prof = Professor(email_addr, course_id, section_data)
+                prof.create_message()
+                prof.send_message()
                 prev_index = index
                 print("\n\n")
+            prev_id = row[1]
 
-                
+
 # password reset email
 def send_password_reset_email(user):
     """Evan's password reset function"""
