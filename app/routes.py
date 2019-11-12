@@ -2,14 +2,10 @@ from flask import render_template, flash, redirect, url_for, request
 from flask_login import current_user, login_user, logout_user, login_required
 from app import app, db
 from app.forms import LoginForm, RegistrationForm, ResetPasswordForm, RequestPasswordResetForm, ChangePasswordForm, CreateSurveyForm, DatesForm, SurveyForm
-# CHANGE WHEN FUNCTION IS MOVED:
-from app.forms import is_valid_datetime
-from datetime import datetime
-
 from app.models import User, Deadline, Reminder, create_reminders
-from app.survey import submitResult, roster_file, clearSurveySession, convertToCSV, studentExists
+from app.survey import submitResult, roster_file, clearSurveySession, convertToCSV, studentExists, is_valid_datetime
 from app.emails import send_password_reset_email, send_all_student_emails, send_all_prof_emails
-# from werkzeug.urls import url_parse
+from datetime import datetime
 from werkzeug.utils import secure_filename
 import os
 
@@ -189,19 +185,22 @@ def create_defaults(curr_time):
         defaults.append(curr_time.strftime(default_format))
     return defaults
 
+# TODO: remove when done testing
 @app.route('/startsurvey')
 @login_required
 def startSurvey():
     flash('Survey session started')
     send_all_student_emails()
     return redirect(url_for('index'))
-  
+
+# TODO: remove when done testing
 @app.route('/sendAnalytics')
+@login_required
 def sendAnalytics():
     send_all_prof_emails()
     flash('Analytics Sent')
     return redirect(url_for('index'))
-  
+
 @app.route('/survey', methods=['GET', 'POST'])
 def survey():
     form = SurveyForm()

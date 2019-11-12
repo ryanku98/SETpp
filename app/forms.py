@@ -4,36 +4,7 @@ from wtforms.ext.dateutil.fields import DateTimeField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 from flask_wtf.file import FileRequired, FileAllowed
 from app.models import User, Deadline, Reminder
-from app.survey import studentExists
-# CHANGE WHEN FUNCTION IS MOVED:
-# from app.routes import is_valid_datetime
-
-# TODO: move this to survey.py after data analysis feature is done
-# CHANGE in app.routes setDates?
-# CHANGE in app.forms DatesForm validation
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
-def is_valid_datetime(dt1, dt2):
-    """Returns True if dt1 is strictly after dt2 - False otherwise"""
-    # at least one attribute of delta is positive iff dt1 is in fact after dt2 (non-positive attributes are 0)
-    # all attributes of delta are 0 iff dt1 is identical to dt2
-    # at least one attribute of delta is negative iff dt1 is before dt2 (non-negative attributes are 0)
-    delta = relativedelta(dt1, dt2)
-    # test for negativity in attributes:
-    # first assume invalid
-    # if hit positive value, set flag to True but continue to end
-    # if hit negative value, return False immediately and unconditionally
-    # if/when reached end, return flag (if all 0s, flag remains False)
-    validity = False
-    delta_attributes = [delta.years, delta.months, delta.weeks, delta.days, delta.hours, delta.minutes, delta.seconds, delta.microseconds]
-    for attribute in delta_attributes:
-        # if positive
-        if attribute > 0:
-            validity = True
-        # if negative
-        elif attribute < 0:
-            return False
-    return validity
+from app.survey import studentExists, is_valid_datetime
 
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired()])
