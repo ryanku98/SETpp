@@ -9,7 +9,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from flask import url_for
 from threading import Thread
-from survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, fr_ids, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_file, results_file, studentExists, removeZeroes, Section, HEADERS
+from app.survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, fr_ids, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_file, results_file, studentExists, removeZeroes, Section, HEADERS
 
 SENDER_EMAIL = "setsystempp@gmail.com"
 SURVEY_LINK = "http://localhost:5000/survey"
