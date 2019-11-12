@@ -9,7 +9,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from flask import url_for
 from threading import Thread
-from survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_file, results_file, studentExists, removeZeroes, Section, HEADERS
+from survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, fr_ids, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_file, results_file, studentExists, removeZeroes, Section, HEADERS
 
 SENDER_EMAIL = "setsystempp@gmail.com"
 SURVEY_LINK = "http://localhost:5000/survey"
@@ -85,7 +85,7 @@ def format_stats(email, course, mean_list, std_list, fr_list):
     for m in range(2, len(std_list)):
         stds += "Standard deviation for question \'{}\': {}\n".format(HEADERS[m], std_list[m])
     for m in range(2, len(fr_list)):
-        frs += "Answer for free response question \'{}\': {}\n".format(HEADERS[m], fr_list)
+        frs += "Answer for free response question \'{}\': {}\n".format(HEADERS[fr_ids[m]], fr_list)
     stats.append(means)
     stats.append(stds)
     stats.append(frs)
