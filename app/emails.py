@@ -81,11 +81,13 @@ def format_stats(email, course, mean_list, std_list, fr_list):
     stats.append(email)
     stats.append(course)
     for m in range(2, len(mean_list)):
-        means += "Mean for question \'{}\': {}\n".format(HEADERS[m], mean_list[m])
+        if (m not in fr_ids):
+            means += "- Mean for question \'{}\': {}\n".format(HEADERS[m], mean_list[m])
     for m in range(2, len(std_list)):
-        stds += "Standard deviation for question \'{}\': {}\n".format(HEADERS[m], std_list[m])
+        if (m not in fr_ids):
+            stds += "- Standard deviation for question \'{}\': {}\n".format(HEADERS[m], std_list[m])
     for m in range(2, len(fr_list)):
-        frs += "Answer for free response question \'{}\': {}\n".format(HEADERS[fr_ids[m]], fr_list)
+        frs += "- Answer for free response question \'{}\': {}\n".format(HEADERS[fr_ids[m]], fr_list)
     stats.append(means)
     stats.append(stds)
     stats.append(frs)
