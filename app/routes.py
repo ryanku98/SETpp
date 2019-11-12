@@ -212,6 +212,7 @@ def sendReminder():
 
 @app.route('/upload')
 @login_required
+
 def upload():
     #send_all_student_emails()
     flash('Uploaded')
