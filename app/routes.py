@@ -201,6 +201,24 @@ def sendAnalytics():
     flash('Analytics Sent')
     return redirect(url_for('index'))
 
+
+@app.route('/sendReminder')
+@login_required
+def sendReminder():
+    send_all_student_emails()
+    flash('Reminder Emails Sent')
+    return redirect(url_for('index'))
+
+
+@app.route('/upload')
+@login_required
+
+def upload():
+    #send_all_student_emails()
+    flash('Uploaded')
+    return redirect(url_for('index'))
+
+
 @app.route('/survey', methods=['GET', 'POST'])
 def survey():
     form = SurveyForm()
