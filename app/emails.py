@@ -150,7 +150,7 @@ def send_all_prof_emails():
 
 # password reset email
 def send_password_reset_email(user):
-    """Evan's password reset function"""
+    """Function called to send an email with reset password link"""
     token = user.get_reset_password_token() # generate token for email
     body = "Hello, please follow the link to reset password: " + url_for('resetPassword', token=token, _external=True)
     message = MIMEMultipart()
