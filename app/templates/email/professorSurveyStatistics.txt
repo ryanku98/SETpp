@@ -1,3 +1,11 @@
-Hello {},
-Here are you TA's teaching results:
+Hello Professor {},
+Here are your TA's teaching results for section {}:
+
+MEANS
+{}
+
+STANDARD deviations
+{}
+
+FREE RESPONSE
 {}

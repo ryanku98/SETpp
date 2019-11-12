@@ -3,8 +3,11 @@ import csv
 import xlrd
 import pandas as pd
 
-headers = ["Instructor Email","Class Nbr","The labs helped me understand the lecture material. (An answer of 3 is neutral)",
+HEADERS = ["Instructor Email","Class Nbr","The labs helped me understand the lecture material. (An answer of 3 is neutral)",
 "The labs taught me new skills. (An answer of 3 is neutral)","The labs taught me to think creatively. (An answer of 3 is neutral)","I would be able to repeat the labs without help. (An answer of 3 is neutral)","What was your favorite aspect of the lab? (Free text response)","What about the lab would you like to see improved? (Free text response)","The lab instructor was supportive. (An answer of 3 is neutral)","The lab instructor was approachable. (An answer of 3 is neutral)","The lab instructor was able to answer my questions. (An answer of 3 is neutral)","The lab instructor helped me reach a clear understanding of key concepts. (An answer of 3 is neutral)","The lab instructor fostered a mutually respectful learning environment. (An answer of 3 is neutral)","What, if anything, could the lab instructor do to improve the experience? (Free text response)","The amount of lab equipment was sufficient. (An answer of 3 is neutral)","The available space was sufficient for the lab activities. (An answer of 3 is neutral)","If lab equipment or setups were not functioning properly, adequate support was available to rectify the situation. (An answer of 3 is neutral)","What, if anything, could improve lab space and equipment? (Free text response)","On average, the approximate number of hours completing a lab was (5 choices: <2 2 2.5 3 >3)","How many hours did you spend preparing for the lab? (5 choices: <2 2 2.5 3 >3)","How many hours did you spend writing lab reports outside the designated lab period? (5 choices: <2 2 2.5 3 >3)","What feedback would you give the lecture section instructor (not the lab TA) about the labs? (Free text response)"]
+
+fr_ids = [6, 7, 13, 17, 21]
+
 
 questions_file = os.path.join('documents', 'survey_questions.txt')
 roster_file = os.path.join('documents', 'roster.csv')
@@ -129,30 +132,32 @@ def convertToCSV(filename):
 class Section:
     def __init__(self, course_id, data):
         self.prof_email = "a1morales@scu.edu"
+        self.course_id = course_id
         self.mean_list = []
         self.std_list = []
         self.fr_list = []
         self.data = data
+        self.course_id = course_id
 
     def get_section_stats(self):
         """WLL BE CALLED ON INDIVIDUAL SECTIONS"""
-
-        # add first row to self.data
-        self.data.insert(0, headers)
+        # self.data.insert(0, headers) # add first row to self.data
 
         df = pd.DataFrame.from_records(self.data)
-
         course_i = 1
         question_i = 2
-        fr_ids = [6, 7, 13, 17, 21]
 
-        course = section_data[course_i]
 
-        for i in range(question_i, len(section_data)):
+        # print(df)
+        for i in range(question_i, len(self.data[0])):
             if (i in fr_ids):
-                fr_list.append(section_data[i])
+                self.fr_list.append(df[i].values)
             else:
-                mean_list.append(df[section_data[i]].mean())
-                std_list.append(df[section_data[i]].std())
+                self.mean_list.append( pd.to_numeric(df[i]).mean() )
+                self.std_list.append( pd.to_numeric(df[i]).std() )
 
-        return section_stats
+# data = [['eejohnson@scu.edu',83505,1,1,1,1,'asdf','asdf',1,1,1,1,1,'asdf',1,1,1,'asdf',2.5,2.5,2.5,'asdf'],
+# ['eejohnson@scu.edu',83505,2,1,1,1,'asdf','asdf',1,1,1,1,1,'asdf',1,1,1,'asdf',2.5,2.5,2.5,'asdf']]
+# sect = Section(83505,data)
+# sect.get_section_stats()
+# print(sect.fr_list)

@@ -8,7 +8,7 @@ from datetime import datetime
 
 from app.models import User, Deadline, Reminder, create_reminders
 from app.survey import submitResult, roster_file, clearSurveySession, convertToCSV, studentExists
-from app.emails import send_password_reset_email, send_all_student_emails
+from app.emails import send_password_reset_email, send_all_student_emails, send_all_prof_emails
 # from werkzeug.urls import url_parse
 from werkzeug.utils import secure_filename
 import os
@@ -189,6 +189,19 @@ def create_defaults(curr_time):
         defaults.append(curr_time.strftime(default_format))
     return defaults
 
+@app.route('/startsurvey')
+@login_required
+def startSurvey():
+    flash('Survey session started')
+    send_all_student_emails()
+    return redirect(url_for('index'))
+  
+@app.route('/sendAnalytics')
+def sendAnalytics():
+    send_all_prof_emails()
+    flash('Analytics Sent')
+    return redirect(url_for('index'))
+  
 @app.route('/survey', methods=['GET', 'POST'])
 def survey():
     form = SurveyForm()
