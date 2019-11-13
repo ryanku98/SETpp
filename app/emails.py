@@ -114,7 +114,7 @@ def send_all_prof_emails():
             prev_index = index
         prev_id = row[c_id_i_results]
     # send result of last section
-    prof = Professor(email=df[prev_index][prof_email_i_results], section=Section(df[prev_index][c_id_i_results], df[prev_index:len(df)]))
+    prof = Professor(email=df[prev_index][prof_email_i_results], section=Section(df[prev_index][c_id_i_results], df[prev_index:]))
     prof.send_message()
 
 # password reset email
