@@ -84,8 +84,11 @@ class Professor:
         prof_msg_template = os.path.join('app', 'templates', 'email', 'professorSurveyStatistics.txt')
         with open(prof_msg_template, 'r') as file:
             # stats = format_stats(self.email, self.section.course_id, self.section.mean_list, self.section.std_list, self.section.fr_list)
-            stats = self.section.format_stats(self.email)
-            body = file.read().format(*stats)
+            f_stats = self.section.formatted_stats
+            f_stats.insert(0, self.email)
+            # print(f_stats)
+            # print(len(f_stats))
+            body = file.read().format(*f_stats)
 
         message = MIMEMultipart()
         message["From"] = SENDER_EMAIL
