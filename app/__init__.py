@@ -64,7 +64,6 @@ atexit.register(lambda: scheduler.shutdown())
 
 from app import routes, models  #module will define structure of the database
 
-if __name__ == '__main__':
-    print('Scheduler starting...')
-    scheduler.start()
-    # pass
+# if __name__ == '__main__':
+#     print('Scheduler starting...')
+#     scheduler.start()
