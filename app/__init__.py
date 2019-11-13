@@ -39,7 +39,7 @@ def check_dates():
             d_sent = True
             Deadline.query.delete()
 
-    reminders = Reminder.query.all()
+    reminders = Reminder.query.order_by(Reminder.datetime).all()
     # rem_sent flag: if a reminder has been sent already, other reminders that may have passed within the same interval should not trigger another reminder (and thus should be removed)
     rem_sent = False
     for reminder in reminders:

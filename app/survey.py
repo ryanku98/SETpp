@@ -1,28 +1,34 @@
 import os
 import csv
 import xlrd
-import pandas as pd
+# import pandas as pd
+from app import db
+from app.models import Student, Section, Result
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
-questions_file = os.path.join('documents', 'survey_questions.txt')
 roster_file = os.path.join('documents', 'roster.csv')
+roster_filepath = os.path.join('documents', 'roster.csv')
+questions_file = os.path.join('documents', 'survey_questions.txt')
 results_file = os.path.join('documents', 'results.csv')
 s_id_i_roster = 8
 c_id_i_roster = 1
 prof_email_i_roster = 7
 stud_email_i_roster = 9
+subject_i_roster = 2
+course_i_roster = 3
+prof_name_i_roster = 6
 prof_email_i_results = 0
 c_id_i_results = 1
 fr_ids = [6, 7, 13, 17, 21]
 
 # initialize results table if DNE
-def initResultsTable():
-    if not os.path.exists(results_file):
-        with open(results_file, 'w', newline='') as f_results:
-            csv_results = csv.writer(f_results, delimiter=',')
-            csv_results.writerow(getResultsHeaders())
-            print('Headers loaded')
+# def initResultsTable():
+#     if not os.path.exists(results_file):
+#         with open(results_file, 'w', newline='') as f_results:
+#             csv_results = csv.writer(f_results, delimiter=',')
+#             csv_results.writerow(getResultsHeaders())
+#             print('Headers loaded')
 
 # retrieve headers: instructor email + class nbr + questions
 def getResultsHeaders():
@@ -38,16 +44,30 @@ def getResultsHeaders():
     return headers
 
 # enters new submission into results table
-def submitResult(submission):
-    # init table if DNE
-    if not os.path.exists(results_file):
-        initResultsTable()
-    # get instructor email using course number, insert into front of list
-    submission.insert(0, searchInstructorEmail(submission[0]))
-    with open(results_file, 'a', newline='') as f_results:
-        csv_results = csv.writer(f_results, delimiter=',')
-        csv_results.writerow(submission)
-        print('New submission inserted')
+def submitResult(course_id, submission):
+    data = submission   # submission should be list of answers to questions
+
+Section.query.delete()
+Result.query.delete()
+db.session.add(Section(subject='COEN', course_num=' 123L', course_id=1234, prof_name='Ryan', prof_email='rku@scu.edu'))
+s = Section.query.filter_by(course_id=1234).first()
+print(s)
+# db.session.add(Result(section=s, response_data=[1, 2, 'a', 4]))
+# r = Result.query.first()
+# print(r)
+db.session.commit()
+
+# enters new submission into results table
+# def submitResult(course_id, submission):
+#     # init table if DNE
+#     if not os.path.exists(results_file):
+#         initResultsTable()
+#     # get instructor email using course number, insert into front of list
+#     submission.insert(0, searchInstructorEmail(submission[0]))
+#     with open(results_file, 'a', newline='') as f_results:
+#         csv_results = csv.writer(f_results, delimiter=',')
+#         csv_results.writerow(submission)
+#         print('New submission inserted')
 
 # return results in sorted order
 def getSortedResults():
@@ -74,27 +94,39 @@ def searchInstructorEmail(course_id):
         print('ERROR: Instructor email not found.')
         return 'ERROR'
 
-# delete all files related to last survey session
+# delete all files and database objects related to last survey session
 def clearSurveySession():
     if os.path.exists(roster_file):
         os.remove(roster_file)
     if os.path.exists(results_file):
         os.remove(results_file)
+    Student.query.delete()
+    Section.query.delete()
+    Result.query.delete()
+    db.session.commit()
 
 # Runs through roster, checks if student of matching student ID and course ID exists
 def studentExists(s_id, c_id):
-    with open(roster_file, 'r', newline='') as f_roster:
-        # skip header row
-        next(f_roster)
-        csv_roster = csv.reader(f_roster, delimiter=',')
-        for row in csv_roster:
-            # print(row[s_id_i_roster].lstrip('0') + ' <-> ' + str(s_id) + ' | ' + row[c_id_i_roster].lstrip('0').rstrip('.0') + ' <-> ' + str(c_id))
-            if removeZeroes(row[s_id_i_roster]) == str(s_id) and removeZeroes(row[c_id_i_roster]) == str(c_id):
-                print('Student found')
-                return True
-    print('Student not found')
+    students = Student.query.all()
+    for student in students:
+        if s_id == student.s_id and c_id == student.c_id:
+            print('Student found')
+            return True
     return False
 
+    # with open(roster_file, 'r', newline='') as f_roster:
+    #     # skip header row
+    #     next(f_roster)
+    #     csv_roster = csv.reader(f_roster, delimiter=',')
+    #     for row in csv_roster:
+    #         # print(row[s_id_i_roster].lstrip('0') + ' <-> ' + str(s_id) + ' | ' + row[c_id_i_roster].lstrip('0').rstrip('.0') + ' <-> ' + str(c_id))
+    #         if removeZeroes(row[s_id_i_roster]) == str(s_id) and removeZeroes(row[c_id_i_roster]) == str(c_id):
+    #             print('Student found')
+    #             return True
+    # print('Student not found')
+    # return False
+
+# TODO: remove when unneeded
 def removeZeroes(str):
     return str.lstrip('0').rstrip('.0')
 
@@ -145,39 +177,39 @@ def is_valid_datetime(dt1, dt2):
 
 # SECTION CLASS
 # TODO: Evan creates a dataframe for parssing through these and sending the stats to the professors
-class Section:
-    def __init__(self, course_id, data):
-        self.course_id = course_id
-        self.mean_list = []
-        self.std_list = []
-        self.fr_list = []
-        self.data = data
-        self.course_id = course_id
-        self.formatted_stats = []
-        self.analyze_stats()
-
-    def analyze_stats(self):
-        """Uses Pandas to analyze statistics"""
-        question_i = 2
-        df = pd.DataFrame.from_records(self.data)
-        self.formatted_stats.append(self.course_id)
-        means = ''; stds = ''; frs = ''
-        headers = getResultsHeaders()   # cut off first two columns (intructor email & course id)
-        for i in range(question_i, len(self.data[0])):
-            if i in fr_ids:
-                self.fr_list.append(df[i].values)
-                frs += "- Answer for free response question \'{}\': {}\n".format(headers[i], df[i].values)
-            else:
-                mean = pd.to_numeric(df[i]).mean()
-                self.mean_list.append(mean)
-                means += "- Mean for question \'{}\': {}\n".format(headers[i], mean)
-                std = pd.to_numeric(df[i]).std()
-                self.std_list.append(std)
-                stds += "- Standard deviation for question \'{}\': {}\n".format(headers[i], std)
-
-        self.formatted_stats.append(means)
-        self.formatted_stats.append(stds)
-        self.formatted_stats.append(frs)
+# class Section:
+#     def __init__(self, course_id, data):
+#         self.course_id = course_id
+#         self.mean_list = []
+#         self.std_list = []
+#         self.fr_list = []
+#         self.data = data
+#         self.course_id = course_id
+#         self.formatted_stats = []
+#         self.analyze_stats()
+#
+#     def analyze_stats(self):
+#         """Uses Pandas to analyze statistics"""
+#         question_i = 2
+#         df = pd.DataFrame.from_records(self.data)
+#         self.formatted_stats.append(self.course_id)
+#         means = ''; stds = ''; frs = ''
+#         headers = getResultsHeaders()   # cut off first two columns (intructor email & course id)
+#         for i in range(question_i, len(self.data[0])):
+#             if i in fr_ids:
+#                 self.fr_list.append(df[i].values)
+#                 frs += "- Answer for free response question \'{}\': {}\n".format(headers[i], df[i].values)
+#             else:
+#                 mean = pd.to_numeric(df[i]).mean()
+#                 self.mean_list.append(mean)
+#                 means += "- Mean for question \'{}\': {}\n".format(headers[i], mean)
+#                 std = pd.to_numeric(df[i]).std()
+#                 self.std_list.append(std)
+#                 stds += "- Standard deviation for question \'{}\': {}\n".format(headers[i], std)
+#
+#         self.formatted_stats.append(means)
+#         self.formatted_stats.append(stds)
+#         self.formatted_stats.append(frs)
 
 # data = [['eejohnson@scu.edu',83505,1,1,1,1,'asdf','asdf',1,1,1,1,1,'asdf',1,1,1,'asdf',2.5,2.5,2.5,'asdf'],
 # ['eejohnson@scu.edu',83505,2,1,1,1,'asdf','asdf',1,1,1,1,1,'asdf',1,1,1,'asdf',2.5,2.5,2.5,'asdf']]

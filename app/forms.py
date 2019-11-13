@@ -63,7 +63,7 @@ class DatesForm(FlaskForm):
 class SurveyForm(FlaskForm):
     # SUBMISSION VALIDATION
     student_id = StringField('Student ID #', validators=[DataRequired()])
-    course_id = IntegerField('Lab Course #', validators=[DataRequired()])
+    course_id = IntegerField('Lab Section #', validators=[DataRequired()])
 
     # SURVEY QUESTIONS
     render_kw = {'rows':3,'cols':80}

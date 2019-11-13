@@ -4,5 +4,5 @@ echo Removing database files...
 rm "app.db"
 rm -r "migrations"
 flask db init
-flask db migrate -m "users deadlines reminders table"
+flask db migrate -m "users students sections results deadlines reminders table"
 flask db upgrade

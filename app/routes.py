@@ -2,12 +2,15 @@ from flask import render_template, flash, redirect, url_for, request
 from flask_login import current_user, login_user, logout_user, login_required
 from app import app, db
 from app.forms import LoginForm, RegistrationForm, ResetPasswordForm, RequestPasswordResetForm, ChangePasswordForm, CreateSurveyForm, DatesForm, SurveyForm
-from app.models import User, Deadline, Reminder, create_reminders
+from app.models import User, Student, Section, Result, Deadline, Reminder, create_reminders
 from app.survey import submitResult, roster_file, clearSurveySession, convertToCSV, studentExists, is_valid_datetime
 from app.emails import send_password_reset_email, send_all_student_emails, send_all_prof_emails
 from datetime import datetime
 from werkzeug.utils import secure_filename
 import os
+import csv
+from app.survey import roster_filepath, s_id_i_roster, c_id_i_roster, prof_email_i_roster, stud_email_i_roster, subject_i_roster, course_i_roster, prof_name_i_roster
+from threading import Thread
 
 @app.route('/')
 @app.route('/index')
@@ -116,12 +119,47 @@ def createSurvey():
         f_roster = form.roster.data
         filename = secure_filename(f_roster.filename)
         f_roster.save(os.path.join('documents', filename))
+        # print(form.roster.data)
         # convert to CSV if Excel file
         f_roster = convertToCSV(os.path.join('documents', filename))
-        flash('File uploaded!')
+
+        # TODO: make multithreaded
+        # parse_roster()
+        Thread(target=parse_roster).start()
         # TODO: set default survey deadline to a week from upload in case admin doesn't custom input deadline
-        return redirect(url_for('deadline'))
+        flash('File uploaded!')
+        return redirect(url_for('setDates'))
     return render_template('createSurvey.html', form=form)
+
+def parse_roster():
+    """Use uploaded roster to create students and sections in database - should be called *immediately* after roster is uploaded"""
+    with open(roster_filepath, 'r', newline='') as f_roster:
+        # skip header row
+        next(f_roster)
+        # set of tuples that represent sections
+        # using tuples instead of immediately creating them because every new Section object created is seen as different, even if it holds the same information
+        sections = set()
+        rows = csv.reader(f_roster, delimiter=',')
+        for row in rows:
+            # make one student per row
+            s_id = row[s_id_i_roster].lstrip('0').rstrip('.0')
+            c_id = row[c_id_i_roster].lstrip('0').rstrip('.0')
+            stud_email = row[stud_email_i_roster]
+            db.session.add(Student(s_id=s_id, c_id=c_id, email=stud_email))
+
+            # make one section per row, set object type eliminates repeats
+            subject = row[subject_i_roster]
+            course_num = row[course_i_roster]
+            prof_name = row[prof_name_i_roster]
+            prof_email = row[prof_email_i_roster]
+            sections.add((subject, course_num, c_id, prof_name, prof_email))
+            # sections.add(Section(subject=subject, course=course, course_id=c_id, prof_name=prof_name, prof_email=prof_email))
+
+    for s in sections:
+        db.session.add(Section(subject=s[0], course_num=s[1], course_id=s[2], prof_name=s[3], prof_email=s[4]))
+
+    print('Students and Sections added to database')
+    db.session.commit()
 
 @app.route('/deadline', methods=['GET', 'POST'])
 def setDates():
@@ -202,23 +240,12 @@ def sendAnalytics():
     flash('Analytics Sent')
     return redirect(url_for('index'))
 
-
 @app.route('/sendReminder')
 @login_required
 def sendReminder():
     send_all_student_emails()
     flash('Reminder Emails Sent')
     return redirect(url_for('index'))
-
-
-@app.route('/upload')
-@login_required
-
-def upload():
-    #send_all_student_emails()
-    flash('Uploaded')
-    return redirect(url_for('index'))
-
 
 @app.route('/survey', methods=['GET', 'POST'])
 def survey():
@@ -232,7 +259,13 @@ def survey():
             form.student_id.data = s_id
             form.course_id.data = c_id
     if form.validate_on_submit():
-        submitResult([form.course_id.data, form.learning_1.data, form.learning_2.data, form.learning_3.data, form.learning_4.data, form.learning_5.data, form.learning_6.data, form.lab_1.data, form.lab_2.data, form.lab_3.data, form.lab_4.data, form.lab_5.data, form.lab_6.data, form.spaceequipment_1.data, form.spaceequipment_2.data, form.spaceequipment_3.data, form.spaceequipment_4.data, form.time_1.data, form.time_2.data, form.time_3.data, form.lecture_1.data])
+        # submitResult(form.course_id.data, [form.learning_1.data, form.learning_2.data, form.learning_3.data, form.learning_4.data, form.learning_5.data, form.learning_6.data, form.lab_1.data, form.lab_2.data, form.lab_3.data, form.lab_4.data, form.lab_5.data, form.lab_6.data, form.spaceequipment_1.data, form.spaceequipment_2.data, form.spaceequipment_3.data, form.spaceequipment_4.data, form.time_1.data, form.time_2.data, form.time_3.data, form.lecture_1.data])
+        response_data = [form.learning_1.data, form.learning_2.data, form.learning_3.data, form.learning_4.data, form.learning_5.data, form.learning_6.data, form.lab_1.data, form.lab_2.data, form.lab_3.data, form.lab_4.data, form.lab_5.data, form.lab_6.data, form.spaceequipment_1.data, form.spaceequipment_2.data, form.spaceequipment_3.data, form.spaceequipment_4.data, form.time_1.data, form.time_2.data, form.time_3.data, form.lecture_1.data]
+        try:
+            section = Section.query.filter_by(course_id=c_id).first()
+            # db.session.add(Result(section=section, response_data=response_data))
+        except:
+            pass
         flash('Survey submitted!')
         return redirect(url_for('survey'))
     return render_template('survey.html', form=form)

@@ -1,5 +1,5 @@
-Hello Professor {},
-Here are your TA's teaching evaluations for section {}:
+Hi Professor {},
+Here are your TA's teaching evaluations for {}{} - {}:
 
 MEANS
 {}
