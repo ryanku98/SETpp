@@ -76,5 +76,4 @@ def create_reminders(datetimes):
     for dt in datetimes:
         reminder = Reminder(datetime=dt)
         db.session.add(reminder)
-        flash('Reminder set for ' + str(reminder))
     db.session.commit()

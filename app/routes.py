@@ -148,7 +148,6 @@ def setDates():
 
         # add valid reminders to 'reminders' set (should be datetime objects)
         reminders = set()
-        # reminder flash messages handled by create_reminders()
         if is_valid_datetime(form.reminder1.data, curr_time):
             reminders.add(form.reminder1.data)
         if is_valid_datetime(form.reminder2.data, curr_time):
@@ -157,6 +156,8 @@ def setDates():
             reminders.add(form.reminder3.data)
         # add and commit 'reminders' set to database
         create_reminders(reminders)
+        for reminder in reminders:
+            flash('Reminder set for ' + str(reminder))
         return redirect(url_for('setDates'))
     return render_template('dates.html', form=form, time=curr_time, defaults=create_defaults(curr_time))
 

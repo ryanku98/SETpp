@@ -147,29 +147,37 @@ def is_valid_datetime(dt1, dt2):
 # TODO: Evan creates a dataframe for parssing through these and sending the stats to the professors
 class Section:
     def __init__(self, course_id, data):
-        self.prof_email = "a1morales@scu.edu"
         self.course_id = course_id
         self.mean_list = []
         self.std_list = []
         self.fr_list = []
         self.data = data
         self.course_id = course_id
+        self.formatted_stats = []
+        self.analyze_stats()
 
-    def get_section_stats(self):
-        """WLL BE CALLED ON INDIVIDUAL SECTIONS"""
-        # self.data.insert(0, headers) # add first row to self.data
-
-        df = pd.DataFrame.from_records(self.data)
-        course_i = 1
+    def analyze_stats(self):
+        """Uses Pandas to analyze statistics"""
         question_i = 2
-
-        # print(df)
+        df = pd.DataFrame.from_records(self.data)
+        self.formatted_stats.append(self.course_id)
+        means = ''; stds = ''; frs = ''
+        headers = getResultsHeaders()   # cut off first two columns (intructor email & course id)
         for i in range(question_i, len(self.data[0])):
-            if (i in fr_ids):
+            if i in fr_ids:
                 self.fr_list.append(df[i].values)
+                frs += "- Answer for free response question \'{}\': {}\n".format(headers[i], df[i].values)
             else:
-                self.mean_list.append( pd.to_numeric(df[i]).mean() )
-                self.std_list.append( pd.to_numeric(df[i]).std() )
+                mean = pd.to_numeric(df[i]).mean()
+                self.mean_list.append(mean)
+                means += "- Mean for question \'{}\': {}\n".format(headers[i], mean)
+                std = pd.to_numeric(df[i]).std()
+                self.std_list.append(std)
+                stds += "- Standard deviation for question \'{}\': {}\n".format(headers[i], std)
+
+        self.formatted_stats.append(means)
+        self.formatted_stats.append(stds)
+        self.formatted_stats.append(frs)
 
 # data = [['eejohnson@scu.edu',83505,1,1,1,1,'asdf','asdf',1,1,1,1,1,'asdf',1,1,1,'asdf',2.5,2.5,2.5,'asdf'],
 # ['eejohnson@scu.edu',83505,2,1,1,1,'asdf','asdf',1,1,1,1,1,'asdf',1,1,1,'asdf',2.5,2.5,2.5,'asdf']]
