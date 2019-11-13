@@ -147,29 +147,47 @@ def is_valid_datetime(dt1, dt2):
 # TODO: Evan creates a dataframe for parssing through these and sending the stats to the professors
 class Section:
     def __init__(self, course_id, data):
-        self.prof_email = "a1morales@scu.edu"
         self.course_id = course_id
         self.mean_list = []
         self.std_list = []
         self.fr_list = []
         self.data = data
         self.course_id = course_id
+        self.get_section_stats()
 
     def get_section_stats(self):
-        """WLL BE CALLED ON INDIVIDUAL SECTIONS"""
-        # self.data.insert(0, headers) # add first row to self.data
-
+        """Uses Pandas to analyze statistics"""
         df = pd.DataFrame.from_records(self.data)
-        course_i = 1
         question_i = 2
 
         # print(df)
+        print('LEN(SELF.DATA[0]) = {}'.format(len(self.data[0])))
         for i in range(question_i, len(self.data[0])):
-            if (i in fr_ids):
+            if i in fr_ids:
                 self.fr_list.append(df[i].values)
             else:
                 self.mean_list.append( pd.to_numeric(df[i]).mean() )
                 self.std_list.append( pd.to_numeric(df[i]).std() )
+
+    def format_stats(self, email):
+        """format the lists into a string block to email out"""
+        stats = [] # must be length 5
+        means = ''; stds = ''; frs = ''
+        stats.append(email)
+        stats.append(self.course_id)
+        headers = getResultsHeaders()
+        for m in range(2, len(self.mean_list)):
+            if (m not in fr_ids):
+                means += "- Mean for question \'{}\': {}\n".format(headers[m-2], self.mean_list[m])
+        for m in range(2, len(self.std_list)):
+            if (m not in fr_ids):
+                stds += "- Standard deviation for question \'{}\': {}\n".format(headers[m-2], self.std_list[m])
+        for m in range(len(self.fr_list)):
+            frs += "- Answer for free response question \'{}\': {}\n".format(headers[fr_ids[m]], self.fr_list)
+        stats.append(means)
+        stats.append(stds)
+        stats.append(frs)
+        return stats
 
 # data = [['eejohnson@scu.edu',83505,1,1,1,1,'asdf','asdf',1,1,1,1,1,'asdf',1,1,1,'asdf',2.5,2.5,2.5,'asdf'],
 # ['eejohnson@scu.edu',83505,2,1,1,1,'asdf','asdf',1,1,1,1,1,'asdf',1,1,1,'asdf',2.5,2.5,2.5,'asdf']]
