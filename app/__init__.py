@@ -4,11 +4,15 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_mail import Mail
+from flask_bootstrap import Bootstrap
 import os
 
 static_folder = os.path.abspath('static')
 application = Flask(__name__, static_folder = static_folder)
 app = application
+
+boostrap = Bootstrap(app)
+
 app.config.from_object(Config)
 db = SQLAlchemy(app)  #db object that represents the database
 migrate = Migrate(app, db)
