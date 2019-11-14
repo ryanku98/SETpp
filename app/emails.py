@@ -11,7 +11,7 @@ from threading import Thread
 from app import app
 from app.models import Section, Student, Result, Deadline
 # TODO: these should NOT be needed after database porting is done
-from app.survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, fr_ids, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_filepath, results_file, getSortedResults, getResultsHeaders
+from app.survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, fr_ids, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_filepath, results_file, getSortedResults#, getResultsHeaders
 import csv
 
 def send_email(msg_MIME):
