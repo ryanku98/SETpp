@@ -7,10 +7,7 @@ from app.models import Student, Section, Result
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
-roster_file = os.path.join('documents', 'roster.csv')
 roster_filepath = os.path.join('documents', 'roster.csv')
-questions_file = os.path.join('documents', 'survey_questions.txt')
-results_file = os.path.join('documents', 'results.csv')
 s_id_i_roster = 8
 c_id_i_roster = 1
 prof_email_i_roster = 7
@@ -18,8 +15,12 @@ stud_email_i_roster = 9
 subject_i_roster = 2
 course_i_roster = 3
 prof_name_i_roster = 6
+# TODO: these should NOT be needed after database porting is done
+questions_file = os.path.join('documents', 'survey_questions.txt')
+results_file = os.path.join('documents', 'results.csv')
 prof_email_i_results = 0
 c_id_i_results = 1
+# TODO: these should NOT be hardcoded - write function to determine if quesion is a FRQ (e.g. check if 'Free text response' is in the question)
 fr_ids = [6, 7, 13, 17, 21]
 
 # initialize results table if DNE
@@ -43,31 +44,15 @@ def getResultsHeaders():
         headers[i] = header.rstrip('\n')
     return headers
 
-# enters new submission into results table
-def submitResult(course_id, submission):
-    data = submission   # submission should be list of answers to questions
-
-Section.query.delete()
-Result.query.delete()
-db.session.add(Section(subject='COEN', course_num=' 123L', course_id=1234, prof_name='Ryan', prof_email='rku@scu.edu'))
-s = Section.query.filter_by(course_id=1234).first()
-print(s)
+# Section.query.delete()
+# Result.query.delete()
+# db.session.add(Section(subject='COEN', course_num=' 123L', course_id=1234, prof_name='Ryan', prof_email='rku@scu.edu'))
+# s = Section.query.filter_by(course_id=1234).first()
+# print(s)
 # db.session.add(Result(section=s, response_data=[1, 2, 'a', 4]))
 # r = Result.query.first()
 # print(r)
-db.session.commit()
-
-# enters new submission into results table
-# def submitResult(course_id, submission):
-#     # init table if DNE
-#     if not os.path.exists(results_file):
-#         initResultsTable()
-#     # get instructor email using course number, insert into front of list
-#     submission.insert(0, searchInstructorEmail(submission[0]))
-#     with open(results_file, 'a', newline='') as f_results:
-#         csv_results = csv.writer(f_results, delimiter=',')
-#         csv_results.writerow(submission)
-#         print('New submission inserted')
+# db.session.commit()
 
 # return results in sorted order
 def getSortedResults():
@@ -84,47 +69,19 @@ def getSortedResults():
         entries.sort(key=lambda entry: int(entry[1]))
         return entries
 
-def searchInstructorEmail(course_id):
-    with open(roster_file, 'r', newline='') as f_roster:
-        csv_roster = csv.reader(f_roster, delimiter=',')
-        for row in csv_roster:
-            # if course number matches, return instructor email
-            if removeZeroes(row[c_id_i_roster]) == str(course_id):
-                return row[prof_email_i_roster]
-        print('ERROR: Instructor email not found.')
-        return 'ERROR'
-
-# delete all files and database objects related to last survey session
 def clearSurveySession():
-    if os.path.exists(roster_file):
-        os.remove(roster_file)
+    """Deletes all files and database objects related to last survey session"""
+    # TODO: remove file removal functions when database porting is complete
+    if os.path.exists(roster_filepath):
+        os.remove(roster_filepath)
     if os.path.exists(results_file):
         os.remove(results_file)
     Student.query.delete()
     Section.query.delete()
     Result.query.delete()
+    Deadline.query.delete()
+    Reminder.query.delete()
     db.session.commit()
-
-# Runs through roster, checks if student of matching student ID and course ID exists
-def studentExists(s_id, c_id):
-    students = Student.query.all()
-    for student in students:
-        if s_id == student.s_id and c_id == student.c_id:
-            print('Student found')
-            return True
-    return False
-
-    # with open(roster_file, 'r', newline='') as f_roster:
-    #     # skip header row
-    #     next(f_roster)
-    #     csv_roster = csv.reader(f_roster, delimiter=',')
-    #     for row in csv_roster:
-    #         # print(row[s_id_i_roster].lstrip('0') + ' <-> ' + str(s_id) + ' | ' + row[c_id_i_roster].lstrip('0').rstrip('.0') + ' <-> ' + str(c_id))
-    #         if removeZeroes(row[s_id_i_roster]) == str(s_id) and removeZeroes(row[c_id_i_roster]) == str(c_id):
-    #             print('Student found')
-    #             return True
-    # print('Student not found')
-    # return False
 
 # TODO: remove when unneeded
 def removeZeroes(str):
@@ -142,7 +99,7 @@ def convertToCSV(filename):
         wb = xlrd.open_workbook(filename)
         sheet = wb.sheet_by_index(0)
         # create CSV file
-        with open(roster_file, 'w', newline='') as f_roster:
+        with open(roster_filepath, 'w', newline='') as f_roster:
             csv_roster = csv.writer(f_roster, delimiter=',')
             for row_num in range(sheet.nrows):
                 csv_roster.writerow(sheet.row_values(row_num))
@@ -151,7 +108,7 @@ def convertToCSV(filename):
     # if uploaded file is CSV
     elif ext == '.csv':
         # rename to proper roster filename
-        os.rename(filename, roster_file)
+        os.rename(filename, roster_filepath)
 
 def is_valid_datetime(dt1, dt2):
     """Returns True if dt1 is strictly after dt2 - False otherwise"""

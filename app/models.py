@@ -1,10 +1,14 @@
 from datetime import datetime
 from app import app, db, login
-from flask import flash
+from flask import flash, url_for
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from time import time
 import jwt
+
+def log_added(obj):
+    """Simple universal logging function to standarize log messages for added database objects"""
+    print('ADDED {}'.format(obj))
 
 # inherits from db.Model, a base class for all models in Flask-SQLAlchemy
 class User(UserMixin, db.Model):
@@ -32,37 +36,94 @@ class User(UserMixin, db.Model):
 def load_user(id):
     return User.query.get(int(id))
 
+class Section(db.Model):
+    """Defines the Section database model - all created when roster is uploaded"""
+    id = db.Column(db.Integer, primary_key=True)
+    subject = db.Column(db.String(120))
+    course_num = db.Column(db.String(120))  # catalog number (i.e. 174L)
+    course_id = db.Column(db.Integer, index=True, unique=True)
+    prof_name = db.Column(db.String(120))
+    prof_email = db.Column(db.String(120))
+    # links Student objects to a Section object through section attribute (student.section refers to a Section)
+    students = db.relationship('Student', backref='section', lazy='dynamic')
+    # links Result objects to a Section object through section attribute (result.section refers to a Section)
+    results = db.relationship('Result', backref='section', lazy='dynamic')
+    def __repr__(self):
+        return '<Section Course {}>'.format(self.course_id)
+
+def addSection(subject, course_num, course_id, prof_name, prof_email):
+    section = Section.query.filter_by(course_id=course_id).first()
+    if section is None:
+        section = Section(subject=subject, course_num=course_num, course_id=course_id, prof_name=prof_name, prof_email=prof_email)
+        db.session.add(section)
+        db.session.commit()
+        log_added(section)
+    # the following cases (theoretically) should not happen if the roster is properly ordered by course ID
+    else:
+        print('ERROR: {} cannot be added - already exists'.format(section))
+
 class Student(db.Model):
     """Defines the Student database model - all created when roster is uploaded"""
     id = db.Column(db.Integer, primary_key=True)
     s_id = db.Column(db.Integer, index=True)
-    c_id = db.Column(db.Integer, index=True)
-    email = db.Column(db.String(120), index=True)
+    email = db.Column(db.String(120))
+    # has section attribute linked to corresponding Section object
+    submitted = db.Column(db.Boolean, default=False)
+    c_id = db.Column(db.Integer, db.ForeignKey('section.course_id'))
+    def submitted(self):
+        self.submitted = True
     def __repr__(self):
-        return '<Student {} - ID {} - Course {} - Email {}>'.format(self.id, self.email, self.s_id, self.c_id)
+        return '<Student ID {} - Course {}>'.format(self.s_id, self.c_id)
 
-class Section(db.Model):
-    """Defines the Section database model - all created when roster is uploaded"""
-    id = db.Column(db.Integer, primary_key=True)
-    subject = db.Column(db.String(120), index=True)
-    course_num = db.Column(db.String(120), index=True)  # catalog number (i.e. 174L)
-    course_id = db.Column(db.Integer, index=True, unique=True)
-    prof_name = db.Column(db.String(120))
-    prof_email = db.Column(db.String(120))
-    # links Result objects to a Section object through course_id attribute (result.course_id refers to a Section)
-    # results = db.relationship('Result', backref='section', lazy='dynamic')
-    def __repr__(self):
-        return '<Section {} - {}{} - Course {} - Prof {} - Email {}>'.format(self.id, self.subject, self.course_num, self.course_id, self.prof_name, self.prof_email)
+def addStudent(s_id, c_id, email):
+    """Function to add student, ensures no repeats (same student ID and course ID)"""
+    section = Section.query.filter_by(course_id=c_id).first()
+    student = Student.query.filter_by(s_id=s_id, c_id=c_id).first()
+    if section is not None and student is None:
+        student = Student(section=section, s_id=s_id, email=email)
+        db.session.add(student)
+        db.session.commit()
+        log_added(student)
+    # the following cases (theoretically) should not happen if the roster is logically correct
+    elif student is not None:
+        print('ERROR: {} cannot be added - already exists'.format(student))
+    elif section is None:
+        print('ERROR: <Student ID {} - Course {}> cannot be added - section {} does not exist'.format(s_id, c_id, c_id))
+
+# TODO: check if still needed? remove if unnecessary
+def studentExists(s_id, c_id):
+    """Checks if student of matching student ID and course ID exists in the database"""
+    if Student.query.filter_by(s_id=s_id, c_id=c_id).count() == 0:
+        return False
+    return True
 
 class Result(db.Model):
     """Defines the Result database model - created only when a submission is entered"""
     id = db.Column(db.Integer, primary_key=True)
-    # course_id = db.Column(db.Integer, index=True)
-    # course_id = db.Column(db.Integer, db.ForeignKey('section.course_id'))
-    email = db.Column(db.String(120), index=True)
     response_data = db.Column(db.PickleType)
+    # has section attribute linked to corresponding Section object
+    course_id = db.Column(db.Integer, db.ForeignKey('section.course_id'))
     def __repr__(self):
-        return '<Result {} - Course {} - Prof {}>\n{}'.format(self.id, self.course_id, self.email, self.response_data)
+        return '<Result Course {}>\n{}'.format(self.course_id, self.response_data)
+
+def addResult(s_id, c_id, response_data):
+    section = Section.query.filter_by(course_id=form.course_id.data).first()
+    student = Student.query.filter_by(s_id=s_id, c_id=c_id).first()
+    if section is not None:
+        result = Result(section=section, response_data=response_data)
+        if student is not None and not student.submitted:
+            student.submitted()
+            db.session.add(result)
+            db.session.commit()
+            log_added(result)
+    # the following cases (theoretically) should not happen if the form properly validates
+        elif student is None:
+            print('ERROR: {} cannot be added - <Student ID {} - Course {}> does not exist'.format(result, s_id, c_id))
+        elif student.submitted:
+            print('ERROR: {} cannot be added - {} already submitted'.format(result, student))
+    elif section is None:
+        # should DEFINITELY never happen if student with submitted credentials can be found as per form validation
+        print('ERROR: <Result Course {}> cannot be added - section {} does not exist'.format(c_id, c_id))
 
 class Deadline(db.Model):
     """Defines the Deadline database model - for this instance, at most 1 Deadline should exist at any given time"""
@@ -76,6 +137,17 @@ class Deadline(db.Model):
     def __repr__(self):
         return '<Deadline {}>'.format(str(self))
 
+def addDeadline(dt):
+    """Adds/Updates the Deadline in the database - there should always at most be only one"""
+    deadline = Deadline.query.first()
+    if deadline is not None:
+        deadline.update_datetime(dt)
+    else:
+        deadline = Deadline(datetime=dt)
+        db.session.add(deadline)
+    db.session.commit()
+    print('ADDED: {}'.format(deadline))
+
 class Reminder(db.Model):
     """Defines the Reminder database model - for this application, at most 3 Reminders should exist at any given time"""
     id = db.Column(db.Integer, primary_key=True)
@@ -88,10 +160,12 @@ class Reminder(db.Model):
     def __repr__(self):
         return '<Reminder {}>'.format(str(self))
 
-def create_reminders(datetimes):
-    """Add and commit reminders created from accepted list of datetime objects to the database"""
+def addReminders(datetime_list, now):
+    """Wipe database of Reminder objects and add valid datetimes from inputted list without repeats"""
     Reminder.query.delete()
-    for dt in datetimes:
-        reminder = Reminder(datetime=dt)
-        db.session.add(reminder)
+    for dt in datetime_list:
+        if is_valid_datetime(dt, now) and Reminder.query.filter_by(datetime=dt).count() == 0:
+            reminder = Reminder(datetime=dt)
+            db.session.add(reminder)
+            print('ADDED: {}'.format(reminder))
     db.session.commit()

@@ -3,8 +3,8 @@ from wtforms import FileField, StringField, PasswordField, BooleanField, SubmitF
 from wtforms.ext.dateutil.fields import DateTimeField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 from flask_wtf.file import FileRequired, FileAllowed
-from app.models import User, Deadline, Reminder
-from app.survey import studentExists, is_valid_datetime
+from app.models import User, Student, Section, Result, Deadline, Reminder
+from app.survey import is_valid_datetime
 from datetime import datetime
 
 class LoginForm(FlaskForm):
@@ -62,11 +62,12 @@ class DatesForm(FlaskForm):
 
 class SurveyForm(FlaskForm):
     # SUBMISSION VALIDATION
-    student_id = StringField('Student ID #', validators=[DataRequired()])
+    student_id = IntegerField('Student ID #', validators=[DataRequired()])
     course_id = IntegerField('Lab Section #', validators=[DataRequired()])
 
     # SURVEY QUESTIONS
     render_kw = {'rows':3,'cols':80}
+    # TODO: fix time values to be officially entered as integers for proper data analysis
     learning_1 = RadioField('The labs helped me understand the lecture material. (An answer of 3 is neutral)', choices=[('1','1'), ('2','2'), ('3','3'), ('4','4'), ('5','5')], validators=[DataRequired()])
     learning_2 = RadioField('The labs taught me new skills. (An answer of 3 is neutral)', choices=[('1','1'), ('2','2'), ('3','3'), ('4','4'), ('5','5')], validators=[DataRequired()])
     learning_3 = RadioField('The labs taught me to think creatively. (An answer of 3 is neutral)', choices=[('1','1'), ('2','2'), ('3','3'), ('4','4'), ('5','5')], validators=[DataRequired()])
@@ -94,5 +95,8 @@ class SurveyForm(FlaskForm):
     # but this requires validate_<attribute>(self, <attribute>) format
     # so this is just a small hack to integrate short custom validators
     def validate_course_id(self, course_id):
-        if not studentExists(self.student_id.data, self.course_id.data):
-            raise ValidationError('Matching student ID and lab course number not found on roster, please try again.')
+        student = Student.query.filter_by(s_id=self.student_id.data, c_id=self.course_id.data).first()
+        if student is None:
+            raise ValidationError('Matching student ID and lab section number not found on roster, please try again.')
+        elif student.submitted:
+            raise ValidationError('Database indicates this student has already submitted a survey for lab section {}.'.format(student.c_id))
