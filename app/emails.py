@@ -10,6 +10,7 @@ from email.mime.text import MIMEText
 from flask import url_for
 from threading import Thread
 from app.survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, fr_ids, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_file, results_file, getSortedResults, getResultsHeaders, studentExists, removeZeroes, Section
+from app.plot import PDFPlotter
 
 SENDER_EMAIL = "setsystempp@gmail.com"
 SURVEY_LINK = "http://localhost:5000/survey"
@@ -95,6 +96,19 @@ class Professor:
         message["To"] = self.email
         message["Subject"] =  "Professor {} - {} - Lab {}".format(self.email, SUBJECT, self.section.course_id)
         message.attach(MIMEText(body, "plain"))
+
+        """Create PDF Attachment"""
+        filename = 'documents/pdf_'+str(self.section.course_id)+".pdf"
+        with open(filename, "rb") as attachment:
+            p = MIMEBase('application', 'octet-stream')
+            p.set_payload((attachment).read())
+        encoders.encode_base64(p) # encode binary data into base64 - printable ASCII characters
+        p.add_header(
+            "Content-Disposition",
+            f"attachment; filename= {filename}",
+        )
+        message.attach(p)
+
         return message.as_string()
 
     def send_message(self):
@@ -112,12 +126,22 @@ def send_all_prof_emails():
         # if found end of new section
         curr_id = row[c_id_i_results]
         if curr_id != prev_id and index != prev_index:
-            prof = Professor(email=df[prev_index][prof_email_i_results], section=Section(df[prev_index][c_id_i_results], df[prev_index:index]))
+            section=Section(df[prev_index][c_id_i_results], df[prev_index:index])
+
+            pdf = PDFPlotter(section, "pdf_"+str(prev_id)+".pdf")
+            pdf.createPDF()
+
+            prof = Professor(email=df[prev_index][prof_email_i_results], section=section)
             prof.send_message()
             prev_index = index
         prev_id = row[c_id_i_results]
     # send result of last section
-    prof = Professor(email=df[prev_index][prof_email_i_results], section=Section(df[prev_index][c_id_i_results], df[prev_index:]))
+    section=Section(df[prev_index][c_id_i_results], df[prev_index:])
+
+    pdf = PDFPlotter(section, "pdf_"+str(prev_id)+".pdf")
+    pdf.createPDF()
+
+    prof = Professor(email=df[prev_index][prof_email_i_results], section=section)
     prof.send_message()
 
 # password reset email
