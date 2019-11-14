@@ -8,6 +8,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 roster_filepath = os.path.join('documents', 'roster.csv')
+questions_file = os.path.join('documents', 'survey_questions.txt')
 s_id_i_roster = 8
 c_id_i_roster = 1
 prof_email_i_roster = 7
@@ -16,7 +17,6 @@ subject_i_roster = 2
 course_i_roster = 3
 prof_name_i_roster = 6
 # TODO: these should NOT be needed after database porting is done
-questions_file = os.path.join('documents', 'survey_questions.txt')
 results_file = os.path.join('documents', 'results.csv')
 prof_email_i_results = 0
 c_id_i_results = 1
@@ -31,27 +31,20 @@ fr_ids = [6, 7, 13, 17, 21]
 #             csv_results.writerow(getResultsHeaders())
 #             print('Headers loaded')
 
-# retrieve headers: instructor email + class nbr + questions
-def getResultsHeaders():
-    with open(questions_file, 'r') as f_questions:
-        headers = f_questions.readlines()
-    # put instructor email in first column
-    headers.insert(0, 'Instructor Email')
-    # put course ID in second column
-    headers.insert(1, 'Class Nbr')
-    # strip trailing newline character that shows up for unknown reason
-    for i, header in enumerate(headers):
-        headers[i] = header.rstrip('\n')
-    return headers
-
 # Section.query.delete()
+# Student.query.delete()
 # Result.query.delete()
 # db.session.add(Section(subject='COEN', course_num=' 123L', course_id=1234, prof_name='Ryan', prof_email='rku@scu.edu'))
-# s = Section.query.filter_by(course_id=1234).first()
-# print(s)
+# # s = Section.query.filter_by(course_id=1234).first()
+# s = Section.query.first()
+# # print(s)
 # db.session.add(Result(section=s, response_data=[1, 2, 'a', 4]))
-# r = Result.query.first()
-# print(r)
+# # r = Result.query.first()
+# # print(r)
+# db.session.add(Student(section=s, s_id=1221784, email='rku@scu.edu'))
+# print(Section.query.first())
+# print(Student.query.first())
+# print(Result.query.first())
 # db.session.commit()
 
 # return results in sorted order
@@ -76,8 +69,8 @@ def clearSurveySession():
         os.remove(roster_filepath)
     if os.path.exists(results_file):
         os.remove(results_file)
-    Student.query.delete()
     Section.query.delete()
+    Student.query.delete()
     Result.query.delete()
     Deadline.query.delete()
     Reminder.query.delete()
@@ -109,28 +102,6 @@ def convertToCSV(filename):
     elif ext == '.csv':
         # rename to proper roster filename
         os.rename(filename, roster_filepath)
-
-def is_valid_datetime(dt1, dt2):
-    """Returns True if dt1 is strictly after dt2 - False otherwise"""
-    # at least one attribute of delta is positive iff dt1 is in fact after dt2 (non-positive attributes are 0)
-    # all attributes of delta are 0 iff dt1 is identical to dt2
-    # at least one attribute of delta is negative iff dt1 is before dt2 (non-negative attributes are 0)
-    delta = relativedelta(dt1, dt2)
-    # test for negativity in attributes:
-    # first assume invalid
-    # if hit positive value, set flag to True but continue to end
-    # if hit negative value, return False immediately and unconditionally
-    # if/when reached end, return flag (if all 0s, flag remains False)
-    validity = False
-    delta_attributes = [delta.years, delta.months, delta.weeks, delta.days, delta.hours, delta.minutes, delta.seconds, delta.microseconds]
-    for attribute in delta_attributes:
-        # if positive
-        if attribute > 0:
-            validity = True
-        # if negative
-        elif attribute < 0:
-            return False
-    return validity
 
 # SECTION CLASS
 # TODO: Evan creates a dataframe for parssing through these and sending the stats to the professors

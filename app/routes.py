@@ -3,9 +3,9 @@ import csv
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import current_user, login_user, logout_user, login_required
 from app import app, db
-from app.models import User, Student, Section, Result, Deadline, Reminder, addStudent
+from app.models import User, Student, Section, Result, Deadline, Reminder, addStudent, studentExists
 from app.forms import LoginForm, RegistrationForm, ResetPasswordForm, RequestPasswordResetForm, ChangePasswordForm, CreateSurveyForm, DatesForm, SurveyForm
-from app.survey import roster_filepath, s_id_i_roster, c_id_i_roster, prof_email_i_roster, stud_email_i_roster, subject_i_roster, course_i_roster, prof_name_i_roster, clearSurveySession, convertToCSV, studentExists
+from app.survey import roster_filepath, s_id_i_roster, c_id_i_roster, prof_email_i_roster, stud_email_i_roster, subject_i_roster, course_i_roster, prof_name_i_roster, clearSurveySession, convertToCSV
 from app.emails import send_password_reset_email, send_all_student_emails, send_all_prof_emails
 from datetime import datetime
 from werkzeug.utils import secure_filename
@@ -118,8 +118,9 @@ def createSurvey():
         f_roster = convertToCSV(os.path.join('documents', filename))
         print('Roster uploaded - parsing data...')
         Thread(target=parse_roster).start()
-        # TODO: set default survey deadline to a week from upload in case admin doesn't custom input deadline
         flash('File uploaded!')
+        # set default deadline to a week from upload in case admin doesn't custom input deadline on next page
+        addDeadline(datetime.utcnow(), day_offset=7)
         return redirect(url_for('setDates'))
     return render_template('createSurvey.html', title='Create Survey', form=form)
 
@@ -157,16 +158,6 @@ def setDates():
     if form.validate_on_submit():
         # DatesForm class validates deadline data upon submission
         addDeadline(form.deadline.data)
-
-        # add valid reminders to 'reminders' set (should be datetime objects)
-        # reminders = set()
-        # if is_valid_datetime(form.reminder1.data, curr_time):
-        #     reminders.add(form.reminder1.data)
-        # if is_valid_datetime(form.reminder2.data, curr_time):
-        #     reminders.add(form.reminder2.data)
-        # if is_valid_datetime(form.reminder3.data, curr_time):
-        #     reminders.add(form.reminder3.data)
-        # addReminders(reminders)
         addReminders([form.reminder1.data, form.reminder2.data, form.reminder3.data], now)
         return redirect(url_for('setDates'))
     return render_template('dates.html', title='Deadline & Reminders', form=form, time=curr_time, defaults=create_defaults(curr_time))
@@ -228,4 +219,4 @@ def survey():
         addResult(form.student_id.data, form.course_id.data, response_data)
         flash('Survey submitted!')
         return redirect(url_for('survey'))
-    return render_template('survey.html', title='SET++', form=form)
+    return render_template('survey.html', title='SET++', form=form, deadline=Deadline.query.first(), time=datetime.utcnow())

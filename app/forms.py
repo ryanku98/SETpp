@@ -1,10 +1,9 @@
 from flask_wtf import FlaskForm
 from wtforms import FileField, StringField, PasswordField, BooleanField, SubmitField, IntegerField, RadioField, TextAreaField #, DateTimeField
 from wtforms.ext.dateutil.fields import DateTimeField
-from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
+from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length
 from flask_wtf.file import FileRequired, FileAllowed
-from app.models import User, Student, Section, Result, Deadline, Reminder
-from app.survey import is_valid_datetime
+from app.models import User, Section, Student, Result, Deadline, Reminder, is_valid_datetime
 from datetime import datetime
 
 class LoginForm(FlaskForm):
@@ -66,28 +65,31 @@ class SurveyForm(FlaskForm):
     course_id = IntegerField('Lab Section #', validators=[DataRequired()])
 
     # SURVEY QUESTIONS
-    render_kw = {'rows':3,'cols':80}
+    text_area_size = {'rows':3,'cols':80}
+    scale_choices = [(1,1), (2,2), (3,3), (4,4), (5,5)]
+    time_choices = [(1.5,'<2'), (2,'2'), (2.5,'2.5'), (3,'3'), (3.5,'>3')]
+    max_length = 2000
     # TODO: fix time values to be officially entered as integers for proper data analysis
-    learning_1 = RadioField('The labs helped me understand the lecture material. (An answer of 3 is neutral)', choices=[('1','1'), ('2','2'), ('3','3'), ('4','4'), ('5','5')], validators=[DataRequired()])
-    learning_2 = RadioField('The labs taught me new skills. (An answer of 3 is neutral)', choices=[('1','1'), ('2','2'), ('3','3'), ('4','4'), ('5','5')], validators=[DataRequired()])
-    learning_3 = RadioField('The labs taught me to think creatively. (An answer of 3 is neutral)', choices=[('1','1'), ('2','2'), ('3','3'), ('4','4'), ('5','5')], validators=[DataRequired()])
-    learning_4 = RadioField('I would be able to repeat the labs without help. (An answer of 3 is neutral)', choices=[('1','1'), ('2','2'), ('3','3'), ('4','4'), ('5','5')], validators=[DataRequired()])
-    learning_5 = TextAreaField('What was your favorite aspect of the lab?', render_kw=render_kw, validators=[DataRequired()])
-    learning_6 = TextAreaField('What was your favorite aspect of the lab?', render_kw=render_kw, validators=[DataRequired()])
-    lab_1 = RadioField('The lab instructor was supportive. (An answer of 3 is neutral)', choices=[('1','1'), ('2','2'), ('3','3'), ('4','4'), ('5','5')], validators=[DataRequired()])
-    lab_2 = RadioField('The lab instructor was approachable. (An answer of 3 is neutral)', choices=[('1','1'), ('2','2'), ('3','3'), ('4','4'), ('5','5')], validators=[DataRequired()])
-    lab_3 = RadioField('The lab instructor was able to answer my questions. (An answer of 3 is neutral)', choices=[('1','1'), ('2','2'), ('3','3'), ('4','4'), ('5','5')], validators=[DataRequired()])
-    lab_4 = RadioField('The lab instructor helped me reach a clear understanding of key concepts. (An answer of 3 is neutral)', choices=[('1','1'), ('2','2'), ('3','3'), ('4','4'), ('5','5')], validators=[DataRequired()])
-    lab_5 = RadioField('The lab instructor fostered a mutually respectful learning environment. (An answer of 3 is neutral)', choices=[('1','1'), ('2','2'), ('3','3'), ('4','4'), ('5','5')], validators=[DataRequired()])
-    lab_6 = TextAreaField('What, if anything, could the lab instructor do to improve the experience?', render_kw=render_kw, validators=[DataRequired()])
-    spaceequipment_1 = RadioField('The amount of lab equipment was sufficient. (An answer of 3 is neutral)', choices=[('1','1'), ('2','2'), ('3','3'), ('4','4'), ('5','5')], validators=[DataRequired()])
-    spaceequipment_2 = RadioField('The available space was sufficient for the lab activities. (An answer of 3 is neutral)', choices=[('1','1'), ('2','2'), ('3','3'), ('4','4'), ('5','5')], validators=[DataRequired()])
-    spaceequipment_3 = RadioField('If lab equipment or setups were not functioning properly, adequate support was available to rectify the situation. (An answer of 3 is neutral)', choices=[('1','1'), ('2','2'), ('3','3'), ('4','4'), ('5','5')], validators=[DataRequired()])
-    spaceequipment_4 = TextAreaField('What, if anything, could improve lab space and equipment?', render_kw=render_kw, validators=[DataRequired()])
-    time_1 = RadioField('On average, the approximate number of hours completing a lab was', choices=[('<2','<2'), ('2','2'), ('2.5','2.5'), ('3','3'), ('>3','>3')], validators=[DataRequired()])
-    time_2 = RadioField('How many hours did you spend preparing for the lab?', choices=[('<2','<2'), ('2','2'), ('2.5','2.5'), ('3','3'), ('>3','>3')], validators=[DataRequired()])
-    time_3 = RadioField('How many hours did you spend writing lab reports outside the designated lab period?', choices=[('<2','<2'), ('2','2'), ('2.5','2.5'), ('3','3'), ('>3','>3')], validators=[DataRequired()])
-    lecture_1 = TextAreaField('What feedback would you give the lecture section instructor (not the lab TA) about the labs?', render_kw=render_kw, validators=[DataRequired()])
+    learning_1 = RadioField('The labs helped me understand the lecture material. (An answer of 3 is neutral)', choices=scale_choices, validators=[DataRequired()])
+    learning_2 = RadioField('The labs taught me new skills. (An answer of 3 is neutral)', choices=scale_choices, validators=[DataRequired()])
+    learning_3 = RadioField('The labs taught me to think creatively. (An answer of 3 is neutral)', choices=scale_choices, validators=[DataRequired()])
+    learning_4 = RadioField('I would be able to repeat the labs without help. (An answer of 3 is neutral)', choices=scale_choices, validators=[DataRequired()])
+    learning_5 = TextAreaField('What was your favorite aspect of the lab?', render_kw=text_area_size, validators=[DataRequired(), Length(min=1, max=max_length, message='{} character limit.'.format(max_length))])
+    learning_6 = TextAreaField('What was your favorite aspect of the lab?', render_kw=text_area_size, validators=[DataRequired(), Length(min=1, max=max_length, message='{} character limit.'.format(max_length))])
+    lab_1 = RadioField('The lab instructor was supportive. (An answer of 3 is neutral)', choices=scale_choices, validators=[DataRequired()])
+    lab_2 = RadioField('The lab instructor was approachable. (An answer of 3 is neutral)', choices=scale_choices, validators=[DataRequired()])
+    lab_3 = RadioField('The lab instructor was able to answer my questions. (An answer of 3 is neutral)', choices=scale_choices, validators=[DataRequired()])
+    lab_4 = RadioField('The lab instructor helped me reach a clear understanding of key concepts. (An answer of 3 is neutral)', choices=scale_choices, validators=[DataRequired()])
+    lab_5 = RadioField('The lab instructor fostered a mutually respectful learning environment. (An answer of 3 is neutral)', choices=scale_choices, validators=[DataRequired()])
+    lab_6 = TextAreaField('What, if anything, could the lab instructor do to improve the experience?', render_kw=text_area_size, validators=[DataRequired(), Length(min=1, max=max_length, message='{} character limit.'.format(max_length))])
+    spaceequipment_1 = RadioField('The amount of lab equipment was sufficient. (An answer of 3 is neutral)', choices=scale_choices, validators=[DataRequired()])
+    spaceequipment_2 = RadioField('The available space was sufficient for the lab activities. (An answer of 3 is neutral)', choices=scale_choices, validators=[DataRequired()])
+    spaceequipment_3 = RadioField('If lab equipment or setups were not functioning properly, adequate support was available to rectify the situation. (An answer of 3 is neutral)', choices=scale_choices, validators=[DataRequired()])
+    spaceequipment_4 = TextAreaField('What, if anything, could improve lab space and equipment?', render_kw=text_area_size, validators=[DataRequired(), Length(min=1, max=max_length, message='{} character limit.'.format(max_length))])
+    time_1 = RadioField('On average, the approximate number of hours completing a lab was', choices=time_choices, validators=[DataRequired()])
+    time_2 = RadioField('How many hours did you spend preparing for the lab?', choices=time_choices, validators=[DataRequired()])
+    time_3 = RadioField('How many hours did you spend writing lab reports outside the designated lab period?', choices=time_choices, validators=[DataRequired()])
+    lecture_1 = TextAreaField('What feedback would you give the lecture section instructor (not the lab TA) about the labs?', render_kw=text_area_size, validators=[DataRequired(), Length(min=1, max=max_length, message='{} character limit.'.format(max_length))])
 
     submit = SubmitField('Submit')
 
@@ -100,3 +102,10 @@ class SurveyForm(FlaskForm):
             raise ValidationError('Matching student ID and lab section number not found on roster, please try again.')
         elif student.submitted:
             raise ValidationError('Database indicates this student has already submitted a survey for lab section {}.'.format(student.c_id))
+
+    # TODO: make sure this executes/validates properly - still unsure
+    def validate_submit(self, submit):
+        deadline = Deadline.query.first()
+        if deadline is not None and not deadline.is_valid():
+            raise ValidationError('Sorry, the deadline for this survey session has already passed.')
+

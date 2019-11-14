@@ -2,6 +2,12 @@
 
 {% block content %}
 <h1>SETpp Survey</h1>
+{% if not deadline or not deadline.is_valid(time) %}
+<p>WARNING: The deadline for this survey session has ended!</p>
+{% endif %}
+{% if deadline %}
+<p>Deadline: {{ deadline.get_datetime() }}</p>
+{% endif %}
 <form action="" method="post" novalidate>
   {{ form.hidden_tag() }}
   {# SUBMISSION VALIDATION #}
@@ -15,7 +21,7 @@
     {{ form.course_id(size=32) }}<br>
     {% for error in form.course_id.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
   </p>
-  
+
   {# SURVEY QUESTIONS #}
   {# LEARNING #}
   <h3>Learning from Labs</h3>
@@ -77,7 +83,7 @@
     {{ form.learning_6 }}<br>
     {% for error in form.learning_6.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
   </p>
-  
+
   {# LAB INSTRUCTOR #}
   <h3>Lab Instructor</h3>
   <p>
@@ -145,7 +151,7 @@
     {{ form.lab_6 }}<br>
     {% for error in form.lab_6.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
   </p>
-  
+
   {# SPACE AND EQUIPMENT #}
   <h3>Lab Space and Equipment</h3>
   <p>
@@ -189,7 +195,7 @@
     {{ form.spaceequipment_4 }}<br>
     {% for error in form.spaceequipment_4.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
   </p>
-  
+
   {# TIME #}
   <h3>Time Required to Complete Labs</h3>
   <p>
@@ -222,7 +228,7 @@
     </tr><br>
     {% for error in form.time_3.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
   </p>
-  
+
   {# LECTURE INSTRUCTOR #}
   <h3>Lecture Instructor</h3>
   <p>
@@ -230,7 +236,7 @@
     {{ form.lecture_1 }}<br>
     {% for error in form.lecture_1.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
   </p>
-  
+
   <p>{{ form.submit() }}</p>
 </form>
 {% endblock %}

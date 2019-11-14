@@ -1,10 +1,12 @@
-from datetime import datetime
 from app import app, db, login
 from flask import flash, url_for
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from time import time
+from datetime import datetime as DT
+from dateutil.relativedelta import relativedelta
 import jwt
+import pandas
 
 def log_added(obj):
     """Simple universal logging function to standarize log messages for added database objects"""
@@ -48,6 +50,24 @@ class Section(db.Model):
     students = db.relationship('Student', backref='section', lazy='dynamic')
     # links Result objects to a Section object through section attribute (result.section refers to a Section)
     results = db.relationship('Result', backref='section', lazy='dynamic')
+    def get_means(self):
+        """This function uses Pandas to analyze means of the responses linked to this Section instance"""
+        responses = []
+        for result in self.results.all():
+            responses.append(result.response_data)
+        df = pandas.DataFrame(responses)    # dataframe
+        means = df.mean().items()    # zip of data means
+        remove_frqs(means)
+
+    def get_stds(self):
+        """This function uses Pandas to analyze standard deviations of the responses linked to this Section instance"""
+        responses = []
+        for result in self.results.all():
+            responses.append(result.response_data)
+        df = pandas.DataFrame(responses)
+    def frq_responses(self):
+        """This function returns a list of responses for the FRQs"""
+        pass
     def __repr__(self):
         return '<Section Course {}>'.format(self.course_id)
 
@@ -62,6 +82,19 @@ def addSection(subject, course_num, course_id, prof_name, prof_email):
     else:
         print('ERROR: {} cannot be added - already exists'.format(section))
 
+def remove_frqs(zip_obj):
+    """Ensures no FRQ responses get added to dataframe calculations"""
+    i, mean = zip(*zip_obj)
+    
+
+def getQuestionsList():
+    with open(questions_file, 'r') as f_questions:
+        headers = f_questions.readlines()
+    # strip trailing newline character that shows up for unknown reason
+    for i, header in enumerate(headers):
+        headers[i] = header.rstrip('\n')
+    return headers
+
 class Student(db.Model):
     """Defines the Student database model - all created when roster is uploaded"""
     id = db.Column(db.Integer, primary_key=True)
@@ -72,8 +105,10 @@ class Student(db.Model):
     c_id = db.Column(db.Integer, db.ForeignKey('section.course_id'))
     def submitted(self):
         self.submitted = True
+    def get_survey_link(self):
+        return url_for('survey', s=self.s_id, c=self.c_id, _external=True)
     def __repr__(self):
-        return '<Student ID {} - Course {}>'.format(self.s_id, self.c_id)
+        return '<Student ID {} - Course {} - Email {}>'.format(self.s_id, self.c_id, self.email)
 
 def addStudent(s_id, c_id, email):
     """Function to add student, ensures no repeats (same student ID and course ID)"""
@@ -90,7 +125,6 @@ def addStudent(s_id, c_id, email):
     elif section is None:
         print('ERROR: <Student ID {} - Course {}> cannot be added - section {} does not exist'.format(s_id, c_id, c_id))
 
-# TODO: check if still needed? remove if unnecessary
 def studentExists(s_id, c_id):
     """Checks if student of matching student ID and course ID exists in the database"""
     if Student.query.filter_by(s_id=s_id, c_id=c_id).count() == 0:
@@ -104,7 +138,7 @@ class Result(db.Model):
     # has section attribute linked to corresponding Section object
     course_id = db.Column(db.Integer, db.ForeignKey('section.course_id'))
     def __repr__(self):
-        return '<Result Course {}>\n{}'.format(self.course_id, self.response_data)
+        return '<Result Course {} - Data: {}>'.format(self.course_id, self.response_data)
 
 def addResult(s_id, c_id, response_data):
     section = Section.query.filter_by(course_id=form.course_id.data).first()
@@ -128,22 +162,26 @@ def addResult(s_id, c_id, response_data):
 class Deadline(db.Model):
     """Defines the Deadline database model - for this instance, at most 1 Deadline should exist at any given time"""
     id = db.Column(db.Integer, primary_key=True)
-    datetime = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    def update_datetime(self, dt):
-        # assume entered dt is valid
+    datetime = db.Column(db.DateTime, index=True, default=DT.utcnow())
+    def update_datetime(self, dt):  # assume entered dt is valid
         self.datetime = dt
+    def get_datetime(self): # more legible, American format
+        return '{} UTC'.format(self.datetime.strftime('%m-%d-%Y %H:%M'))
+    def is_valid(self, now=DT.utcnow()):
+        return is_valid_datetime(self.datetime, now)
     def __str__(self):
         return self.datetime.strftime('%Y-%m-%dT%H:%M')
     def __repr__(self):
-        return '<Deadline {}>'.format(str(self))
+        return '<Deadline {} UTC>'.format(str(self))
 
-def addDeadline(dt):
+def addDeadline(dt, day_offset=0, hour_offset=0):
     """Adds/Updates the Deadline in the database - there should always at most be only one"""
+    new_time = dt + relativedelta(days=day_offset, hours=hour_offset)
     deadline = Deadline.query.first()
     if deadline is not None:
-        deadline.update_datetime(dt)
+        deadline.update_datetime(new_time)
     else:
-        deadline = Deadline(datetime=dt)
+        deadline = Deadline(datetime=new_time)
         db.session.add(deadline)
     db.session.commit()
     print('ADDED: {}'.format(deadline))
@@ -151,10 +189,13 @@ def addDeadline(dt):
 class Reminder(db.Model):
     """Defines the Reminder database model - for this application, at most 3 Reminders should exist at any given time"""
     id = db.Column(db.Integer, primary_key=True)
-    datetime = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    def update_datetime(self, dt):
-        # assume entered dt is valid
+    datetime = db.Column(db.DateTime, index=True, default=DT.utcnow())
+    def update_datetime(self, dt):  # assume entered dt is valid
         self.datetime = dt
+    def get_datetime(self): # more legible, American format
+        return '{} UTC'.format(self.datetime.strftime('%m-%d-%Y %H:%M'))
+    def is_valid(self, now=DT.utcnow()):
+        return is_valid_datetime(self.datetime, now)
     def __str__(self):
         return self.datetime.strftime('%Y-%m-%dT%H:%M')
     def __repr__(self):
@@ -169,3 +210,25 @@ def addReminders(datetime_list, now):
             db.session.add(reminder)
             print('ADDED: {}'.format(reminder))
     db.session.commit()
+
+def is_valid_datetime(dt1, dt2):
+    """Returns True if dt1 is strictly after dt2 - False otherwise (is before or exactly equal)"""
+    # at least one attribute of delta is positive iff dt1 is in fact after dt2 (non-positive attributes are 0)
+    # all attributes of delta are 0 iff dt1 is identical to dt2
+    # at least one attribute of delta is negative iff dt1 is before dt2 (non-negative attributes are 0)
+    delta = relativedelta(dt1, dt2)
+    # test for negativity in attributes:
+    # first assume invalid
+    # if hit positive value, set flag to True but continue to end
+    # if hit negative value, return False immediately and unconditionally
+    # if/when reached end, return flag (if all 0s, flag remains False)
+    validity = False
+    delta_attributes = [delta.years, delta.months, delta.weeks, delta.days, delta.hours, delta.minutes, delta.seconds, delta.microseconds]
+    for attribute in delta_attributes:
+        # if positive
+        if attribute > 0:
+            validity = True
+        # if negative
+        elif attribute < 0:
+            return False
+    return validity

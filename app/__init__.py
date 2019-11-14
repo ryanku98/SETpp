@@ -22,7 +22,6 @@ import atexit
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
 from app.models import Deadline, Reminder
-from app.survey import is_valid_datetime
 from app.emails import send_all_student_emails, send_all_prof_emails
 
 # START OF SCHEDULER CODE
@@ -37,13 +36,12 @@ def check_dates():
     reminders = Reminder.query.order_by(Reminder.datetime).all()
     # if deadline exists, check if already passed
     if deadline is not None:
-        if not is_valid_datetime(deadline.datetime, now):
+        if not deadline.is_valid(now):
             # send results and delete deadline
             send_all_prof_emails()
             d_sent = True
-            Deadline.query.delete()
     for reminder in reminders:
-        if not is_valid_datetime(reminder.datetime, now):
+        if not reminder.is_valid(now):
             # if a reminder has been sent already, other reminders that may have passed within the same interval should not trigger another reminder (and should be also removed)
             if not r_sent:
                 # TODO: CHANGE TO SEND REMINDER EMAIL
