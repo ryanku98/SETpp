@@ -21,7 +21,7 @@ from app import routes, models  # module will define structure of the database
 import atexit
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
-from app.models import Deadline, Reminder
+from app.models import Deadline, Reminder, log_header
 from app.emails import send_all_student_emails, send_all_prof_emails
 
 # START OF SCHEDULER CODE
@@ -58,17 +58,6 @@ scheduler.start()
 # shut down schedule when app exits
 atexit.register(lambda: scheduler.shutdown())
 # END OF SCHEDULER CODE
-
-def log_header(title):
-    """Simple function to return a string of a title surrounded by dashes to represent a distinct section of log outputs"""
-    if len(title) == 0:
-        return '----------------------------------------'
-    while len(title) < 40:
-        if len(title) % 2 == 0:
-            title = '-' + title
-        else:
-            title = title + '-'
-    return title
 
 # if __name__ == '__main__':
 #     print('Scheduler starting...')

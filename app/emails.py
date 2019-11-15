@@ -9,10 +9,9 @@ from email.mime.text import MIMEText
 from flask import url_for, render_template
 from threading import Thread
 from app import app
-from app.models import Section, Student, Result, Deadline
+from app.models import Section, Student, Result, Deadline, log_header
 # TODO: these should NOT be needed after database porting is done
-from app.survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, fr_ids, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_filepath, results_file, getSortedResults, getResultsHeaders
-import csv
+from app.survey import s_id_i_roster, c_id_i_roster, prof_email_i_roster, stud_email_i_roster, prof_email_i_results, c_id_i_results, roster_filepath, results_file
 
 def send_email(msg_MIME):
     """This is the generic SMTP emailing method that accepts a MIMEMultipart message object"""
@@ -42,37 +41,11 @@ def send_student_msg(student):
 def send_all_student_emails():
     """This function sends emails with individualized links to *all* students in the database to take the survey"""
     students = Student.query.all()
+    print(log_header('STUDENT EMAILS'))
     for student in students:
         # TODO: make multithreaded
         # Thread(target=send_student_msg, args=(student,)).start()
         send_student_msg(student)
-
-# STUDENT CLASS
-# class Student:
-#     def __init__(self, id, email, course):
-#         self.id = id
-#         self.email = email
-#         self.course = course
-#
-#     def create_message(self):
-#         """Creates an email message string based on the student"""
-#         stud_msg_template = os.path.join('app', 'templates', 'email', 'studentSurveyLink.txt')
-#         with open(stud_msg_template, 'r') as file:
-#             link = SURVEY_LINK
-#             # create query string values for form prefilling
-#             if studentExists(self.id, self.course):
-#                 link = SURVEY_LINK + '?s=' + self.id + '&c=' + self.course
-#             body = file.read().format(self.id, self.course, link)
-#         message = MIMEMultipart()
-#         message["From"] = SENDER_EMAIL
-#         message["To"] = self.email
-#         message["Subject"] = "{} - {}".format(self.id, SUBJECT)
-#         message.attach(MIMEText(body, "plain"))
-#         return message.as_string()
-#
-#     # Function to call on a student to send an email to the student
-#     def send_message(self):
-#         Thread( target = send_email, args = (self.email, self.create_message()) ).start()
 
 # PROFESSOR CLASS
 # class Professor:
@@ -107,6 +80,7 @@ def send_prof_msg():
 
 def send_all_prof_emails():
     """Function to email all professors"""
+    print(log_header('PROFESSOR EMAILS'))
     # print(getResultsHeaders())
     df = getSortedResults()
     # prev_id = -1
@@ -151,12 +125,11 @@ def send_password_reset_email(user):
     """Function called to send an email with reset password link"""
     token = user.get_reset_password_token() # generate token for email
     body = "Hello, please follow the link to reset password: " + url_for('resetPassword', token=token, _external=True)
-    message = MIMEMultipart()
-    message["From"] = SENDER_EMAIL
-    message["To"] = user.email
-    message["Subject"] = "Password Reset Request"
-    message.attach(MIMEText(body, "plain"))
-    msg = message.as_string()
+    msg = MIMEMultipart()
+    msg["To"] = user.email
+    msg["Subject"] = "Password Reset Request"
+    msg.attach(MIMEText(body, "plain"))
+    # msg = message.as_string()
     Thread( target = send_email, args = (message['To'], msg) ).start()
 
 # send_all_prof_emails()

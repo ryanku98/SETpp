@@ -3,12 +3,12 @@ import csv
 import xlrd
 # import pandas as pd
 from app import db
-from app.models import Student, Section, Result
+from app.models import log_header, wipeDatabase, addSection, addStudent
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from werkzeug.utils import secure_filename
 
 roster_filepath = os.path.join('documents', 'roster.csv')
-questions_file = os.path.join('documents', 'survey_questions.txt')
 s_id_i_roster = 8
 c_id_i_roster = 1
 prof_email_i_roster = 7
@@ -21,87 +21,72 @@ results_file = os.path.join('documents', 'results.csv')
 prof_email_i_results = 0
 c_id_i_results = 1
 # TODO: these should NOT be hardcoded - write function to determine if quesion is a FRQ (e.g. check if 'Free text response' is in the question)
-fr_ids = [6, 7, 13, 17, 21]
-
-# initialize results table if DNE
-# def initResultsTable():
-#     if not os.path.exists(results_file):
-#         with open(results_file, 'w', newline='') as f_results:
-#             csv_results = csv.writer(f_results, delimiter=',')
-#             csv_results.writerow(getResultsHeaders())
-#             print('Headers loaded')
-
-# Section.query.delete()
-# Student.query.delete()
-# Result.query.delete()
-# db.session.add(Section(subject='COEN', course_num=' 123L', course_id=1234, prof_name='Ryan', prof_email='rku@scu.edu'))
-# # s = Section.query.filter_by(course_id=1234).first()
-# s = Section.query.first()
-# # print(s)
-# db.session.add(Result(section=s, response_data=[1, 2, 'a', 4]))
-# # r = Result.query.first()
-# # print(r)
-# db.session.add(Student(section=s, s_id=1221784, email='rku@scu.edu'))
-# print(Section.query.first())
-# print(Student.query.first())
-# print(Result.query.first())
-# db.session.commit()
+# fr_ids = [6, 7, 13, 17, 21]
 
 # return results in sorted order
-def getSortedResults():
-    # extract result entries and sort by course
-    with open(results_file, 'r', newline='') as f_results:
-        csv_results = csv.reader(f_results, delimiter=',')
-        # extract entries
-        entries = []
-        for row in csv_results:
-            entries.append(row)
-        # remove header row
-        entries.pop(0)
-        # sort by course (column index 1)
-        entries.sort(key=lambda entry: int(entry[1]))
-        return entries
-
-def clearSurveySession():
-    """Deletes all files and database objects related to last survey session"""
-    # TODO: remove file removal functions when database porting is complete
-    if os.path.exists(roster_filepath):
-        os.remove(roster_filepath)
-    if os.path.exists(results_file):
-        os.remove(results_file)
-    Section.query.delete()
-    Student.query.delete()
-    Result.query.delete()
-    Deadline.query.delete()
-    Reminder.query.delete()
-    db.session.commit()
+# def getSortedResults():
+#     # extract result entries and sort by course
+#     with open(results_file, 'r', newline='') as f_results:
+#         csv_results = csv.reader(f_results, delimiter=',')
+#         # extract entries
+#         entries = []
+#         for row in csv_results:
+#             entries.append(row)
+#         # remove header row
+#         entries.pop(0)
+#         # sort by course (column index 1)
+#         entries.sort(key=lambda entry: int(entry[1]))
+#         return entries
 
 # TODO: remove when unneeded
 def removeZeroes(str):
     return str.lstrip('0').rstrip('.0')
 
-def convertToCSV(filename):
-    """Converts uploaded roster to CSV if Excel file, otherwise simply renames"""
-    if not os.path.exists(filename):
-        print('File ' + filename + ' not found.')
-        return
+def parse_roster(form_roster_data):
+    """Use uploaded roster to create corresponding database objects - expects a wtforms.fields.FileField object (i.e. form.<uploaded_file>.data)"""
+    # save file locally
+    filename = secure_filename(form_roster_data.filename)
+    form_roster_data.save(filename)
+    csv_filepath = os.path.join('documents', filename)
+
     ext = filename[filename.rindex('.'):]
-    # if uploaded file is Excel file
-    if ext == '.xlsx' or ext == 'xls':
-        # open excel file
+    # if Excel file, convert to CSV and remove Excel version
+    if ext == '.xlsx' or ext == '.xls':
         wb = xlrd.open_workbook(filename)
         sheet = wb.sheet_by_index(0)
-        # create CSV file
-        with open(roster_filepath, 'w', newline='') as f_roster:
+        # convert
+        with open(csv_filepath, 'w', newline='') as f_roster:
             csv_roster = csv.writer(f_roster, delimiter=',')
             for row_num in range(sheet.nrows):
                 csv_roster.writerow(sheet.row_values(row_num))
-        # remove after converting
+        # remove Excel file
         os.remove(filename)
-    # if uploaded file is CSV
+    # if already CSV file, simply move file
     elif ext == '.csv':
-        # rename to proper roster filename
-        os.rename(filename, roster_filepath)
+        os.rename(filename, csv_filepath)
+
+    with open(csv_filepath, 'r', newline='') as f_roster:
+        # skip header row
+        next(f_roster)
+        rows = csv.reader(f_roster, delimiter=',')
+        prev_c_id = -1
+        print(log_header('ROSTER UPLOADED - PARSING'))
+        for row in rows:
+            # add sections, addSection() avoids repeats
+            subject = row[subject_i_roster]
+            course_num = row[course_i_roster]
+            c_id = row[c_id_i_roster].lstrip('0').rstrip('.0')
+            prof_name = row[prof_name_i_roster]
+            prof_email = row[prof_email_i_roster]
+            # only attempt to add a new section if moved onto new section
+            if prev_c_id != c_id:
+                addSection(subject, course_num, c_id, prof_name, prof_email)
+                prev_c_id = c_id
+            # make one student per row
+            s_id = row[s_id_i_roster].lstrip('0').rstrip('.0')
+            stud_email = row[stud_email_i_roster]
+            addStudent(s_id, c_id, stud_email)
+    os.remove(csv_filepath)
 
 # SECTION CLASS
 # TODO: Evan creates a dataframe for parssing through these and sending the stats to the professors

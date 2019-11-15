@@ -1,3 +1,6 @@
+import os
+import jwt
+import pandas
 from app import app, db, login
 from flask import flash, url_for
 from flask_login import UserMixin
@@ -5,8 +8,17 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from time import time
 from datetime import datetime as DT
 from dateutil.relativedelta import relativedelta
-import jwt
-import pandas
+
+def log_header(title):
+    """Simple function to return a string of a title surrounded by dashes to represent a distinct section of log outputs"""
+    if len(title) == 0:
+        return '----------------------------------------------------------------------'
+    while len(title) < 70:
+        if len(title) % 2 == 0:
+            title = '-' + title
+        else:
+            title = title + '-'
+    return title
 
 def log_added(obj):
     """Simple universal logging function to standarize log messages for added database objects"""
@@ -38,6 +50,14 @@ class User(UserMixin, db.Model):
 def load_user(id):
     return User.query.get(int(id))
 
+def wipeDatabase():
+    """Deletes all files and database objects related to last survey session"""
+    Section.query.delete()
+    Student.query.delete()
+    Result.query.delete()
+    Deadline.query.delete()
+    Reminder.query.delete()
+
 class Section(db.Model):
     """Defines the Section database model - all created when roster is uploaded"""
     id = db.Column(db.Integer, primary_key=True)
@@ -55,19 +75,62 @@ class Section(db.Model):
         responses = []
         for result in self.results.all():
             responses.append(result.response_data)
-        df = pandas.DataFrame(responses)    # dataframe
+        df = pandas.DataFrame(responses, column=getQuestionsList())    # dataframe
         means = df.mean().items()    # zip of data means
-        remove_frqs(means)
+        return remove_frqs(means)
 
     def get_stds(self):
         """This function uses Pandas to analyze standard deviations of the responses linked to this Section instance"""
         responses = []
         for result in self.results.all():
             responses.append(result.response_data)
-        df = pandas.DataFrame(responses)
+        df = pandas.DataFrame(responses, column=getQuestionsList())    # dataframe
+        means = df.std().items()    # zip of data stds
+        return remove_frqs(means)
+
     def frq_responses(self):
-        """This function returns a list of responses for the FRQs"""
-        pass
+        """
+        This function returns a list of responses for the FRQs
+        This format of the returned values should be a tuple of tuples as follows:
+                Q1 = 'Ways to say hi';  Q2 = 'Ways to say bye'
+                A_a1 = 'Hi';            A_a2 = 'Bye'
+                A_b1 = 'Hello';         A_b2 = 'Byebye'
+                responses_tuple = ( (Q1, (A_a1, A_b1) ), (Q2, (A_a2, A_b2) ) )
+                -->
+                responses_tuple = (('Ways to say hi', ('Hi', 'Hello')), ('Ways to say bye', ('Bye', 'Byebye')))
+        To retrieve specific values:
+                print('responses_tuple: {}'.format(responses_tuple))
+                for x, question_tuple in enumerate(responses_tuple):
+                    print('\tquestion_tuple {}: {}'.format(x, question_tuple))
+                    answer_tuple = question_tuple[1]    # 1 is *mandatory* not example because the answer_tuple is always the 1st (index)/2nd (object) of the question_tuple
+                    print('\tanswers_tuple {}: {}'.format(x, answer_tuple))
+                    for y, answer in enumerate(answer_tuple):
+                        print('\t\tanswer {}-{}: {}'.format(x, y, answer))
+            # this loop should print the following
+        >>> responses_tuple: (('Ways to say hi', ('Hi', 'Hello')), ('Ways to say bye', ('Bye', 'Byebye')))
+        >>>     question_tuple 0: ('Ways to say hi', ('Hi', 'Hello'))
+        >>>     answers_tuple 0: ('Hi', 'Hello')
+        >>>         answer 0-0: Hi
+        >>>         answer 0-1: Hello
+        >>>     question_tuple 1: ('Ways to say bye', ('Bye', 'Byebye'))
+        >>>     answers_tuple 1: ('Bye', 'Byebye')
+        >>>         answer 1-0: Bye
+        >>>         answer 1-1: Byebye
+        """
+        responses_tuple = []    # will be converted to tuple later
+        results = self.results.query.all()
+        for i, question in enumerate(getQuestionsList()):
+            # if index corresponds to an FRQ
+            if 'free text response' in question.lower():
+                answers_tuple = []  # will be converted to tuple later
+                # add responses for question i to a list
+                for result in results:
+                    answers.append(result.response_data[i])
+                # question_tuple = (question, tuple(answers_tuple))
+                # responses_tuple.append(question_tuple)
+                responses_tuple.append((question, tuple(answer_tuple)))
+        return tuple(responses_tuple)
+
     def __repr__(self):
         return '<Section Course {}>'.format(self.course_id)
 
@@ -84,11 +147,23 @@ def addSection(subject, course_num, course_id, prof_name, prof_email):
 
 def remove_frqs(zip_obj):
     """Ensures no FRQ responses get added to dataframe calculations"""
-    i, mean = zip(*zip_obj)
-    
+    # this is required for a severe edge case when an FRQ of every result happens to be numbers only
+    indices, items = zip(*zip_obj)
+    indices = list(indices)
+    items = list(items)
+    questions = getQuestionsList()
+    frqs = []   # list of frqs that showed up
+    for i in indices:
+        if 'free text response' in questions[i].lower():
+            frqs.append(i)
+    for i in frqs:
+        indices.pop(i)
+        items.pop(i)
+    # items is now a list of dataframe values corresponding to only numerical inputs of the survey form
+    return items
 
 def getQuestionsList():
-    with open(questions_file, 'r') as f_questions:
+    with open(os.path.join('documents', 'survey_questions.txt'), 'r') as f_questions:
         headers = f_questions.readlines()
     # strip trailing newline character that shows up for unknown reason
     for i, header in enumerate(headers):
@@ -169,10 +244,10 @@ class Deadline(db.Model):
         return '{} UTC'.format(self.datetime.strftime('%m-%d-%Y %H:%M'))
     def is_valid(self, now=DT.utcnow()):
         return is_valid_datetime(self.datetime, now)
-    def __str__(self):
+    def default_format(self):
         return self.datetime.strftime('%Y-%m-%dT%H:%M')
     def __repr__(self):
-        return '<Deadline {} UTC>'.format(str(self))
+        return '<Deadline {} UTC>'.format(self.default_format())
 
 def addDeadline(dt, day_offset=0, hour_offset=0):
     """Adds/Updates the Deadline in the database - there should always at most be only one"""

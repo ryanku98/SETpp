@@ -3,12 +3,11 @@ import csv
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import current_user, login_user, logout_user, login_required
 from app import app, db
-from app.models import User, Student, Section, Result, Deadline, Reminder, addStudent, studentExists
+from app.models import User, Student, Section, Result, Deadline, Reminder, log_header, wipeDatabase, studentExists, addResult, addDeadline, addReminders
 from app.forms import LoginForm, RegistrationForm, ResetPasswordForm, RequestPasswordResetForm, ChangePasswordForm, CreateSurveyForm, DatesForm, SurveyForm
-from app.survey import roster_filepath, s_id_i_roster, c_id_i_roster, prof_email_i_roster, stud_email_i_roster, subject_i_roster, course_i_roster, prof_name_i_roster, clearSurveySession, convertToCSV
+from app.survey import parse_roster
 from app.emails import send_password_reset_email, send_all_student_emails, send_all_prof_emails
 from datetime import datetime
-from werkzeug.utils import secure_filename
 from threading import Thread
 
 @app.route('/')
@@ -110,41 +109,23 @@ def createSurvey():
     form = CreateSurveyForm()
     if form.validate_on_submit():
         # clear old roster and results
-        clearSurveySession()
-        f_roster = form.roster.data
-        filename = secure_filename(f_roster.filename)
-        f_roster.save(os.path.join('documents', filename))
-        # convert to CSV if Excel file
-        f_roster = convertToCSV(os.path.join('documents', filename))
-        print('Roster uploaded - parsing data...')
-        Thread(target=parse_roster).start()
+        wipeDatabase()
+        # TODO: make multithreaded
+        # saveRoster(form.roster.data)
+        parse_roster(form.roster.data)
+
+        # f_roster = form.roster.data
+        # filename = secure_filename(f_roster.filename)
+        # f_roster.save(os.path.join('documents', filename))
+        # # convert to CSV if Excel file
+        # f_roster = convertToCSV(os.path.join('documents', filename))
+
+        # Thread(target=parse_roster).start()
         flash('File uploaded!')
         # set default deadline to a week from upload in case admin doesn't custom input deadline on next page
         addDeadline(datetime.utcnow(), day_offset=7)
         return redirect(url_for('setDates'))
     return render_template('createSurvey.html', title='Create Survey', form=form)
-
-def parse_roster():
-    """Use uploaded roster to create students and sections in database - should be called *immediately* after roster is uploaded"""
-    with open(roster_filepath, 'r', newline='') as f_roster:
-        # skip header row
-        next(f_roster)
-        rows = csv.reader(f_roster, delimiter=',')
-        for row in rows:
-            # add sections, addSection() avoids repeats
-            subject = row[subject_i_roster]
-            course_num = row[course_i_roster]
-            prof_name = row[prof_name_i_roster]
-            prof_email = row[prof_email_i_roster]
-            addSection(subject, course_num, c_id, prof_name, prof_email)
-            # make one student per row
-            s_id = row[s_id_i_roster].lstrip('0').rstrip('.0')
-            c_id = row[c_id_i_roster].lstrip('0').rstrip('.0')
-            stud_email = row[stud_email_i_roster]
-            addStudent(s_id, c_id, stud_email)
-    print('Data parsed - the following objects have been added...')
-
-    db.session.commit()
 
 @app.route('/deadline', methods=['GET', 'POST'])
 def setDates():
@@ -169,14 +150,14 @@ def create_defaults(curr_time):
     defaults = []
     deadline = Deadline.query.first()
     if deadline is not None:
-        defaults.append(str(deadline))
+        defaults.append(deadline.default_format())
     else:
         defaults.append(curr_time.strftime(default_format))
     reminders = Reminder.query.all()
     for reminder in reminders:
         defaults.append(str(reminders[0]))
     # fill in to exactly 3 datetimes
-    while len(defaults) < 3:
+    while len(defaults) < 4:
         defaults.append(curr_time.strftime(default_format))
     return defaults
 
