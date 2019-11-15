@@ -61,13 +61,13 @@ class DatesForm(FlaskForm):
 
 class SurveyForm(FlaskForm):
     # SUBMISSION VALIDATION
-    student_id = IntegerField('Student ID #', validators=[DataRequired()])
+    student_id = IntegerField('Student ID # (For verification purposes only - your submission is completely anonymous)', validators=[DataRequired()])
     course_id = IntegerField('Lab Section #', validators=[DataRequired()])
 
     # SURVEY QUESTIONS
     text_area_size = {'rows':3,'cols':80}
-    scale_choices = [(1,1), (2,2), (3,3), (4,4), (5,5)]
-    time_choices = [(1.5,'<2'), (2,'2'), (2.5,'2.5'), (3,'3'), (3.5,'>3')]
+    scale_choices = [('1','1'), ('2','2'), ('3','3'), ('4','4'), ('5','5')]
+    time_choices = [('1.5','<2'), ('2','2'), ('2.5','2.5'), ('3','3'), ('3.5','>3')]
     max_length = 2000
     # TODO: fix time values to be officially entered as integers for proper data analysis
     learning_1 = RadioField('The labs helped me understand the lecture material. (An answer of 3 is neutral)', choices=scale_choices, validators=[DataRequired()])
@@ -100,7 +100,7 @@ class SurveyForm(FlaskForm):
         student = Student.query.filter_by(s_id=self.student_id.data, c_id=self.course_id.data).first()
         if student is None:
             raise ValidationError('Matching student ID and lab section number not found on roster, please try again.')
-        elif student.submitted:
+        elif student.survey_submitted:
             raise ValidationError('Database indicates this student has already submitted a survey for lab section {}.'.format(student.c_id))
 
     # TODO: make sure this executes/validates properly - still unsure

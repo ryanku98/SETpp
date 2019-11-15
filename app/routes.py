@@ -64,14 +64,26 @@ def changePassword():
             current_user.set_password(form.password.data)
             db.session.add(current_user)
             db.session.commit()
-            #logout user if logged-in
-            if current_user.is_authenticated:
-                logout_user()
             flash('Password updated')
         else:
             flash('Incorrect password')
             return redirect(url_for('changePassword'))
     return render_template('changePassword.html', title='Change Password', form=form)
+
+@app.route('/requestreset', methods=['GET', 'POST'])
+def requestResetPassword():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = RequestPasswordResetForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user:
+            send_password_reset_email(user)     #invokes function defined in emails.py
+            flash('Check email for instructions to reset password')
+            return redirect(url_for('login'))
+        else:
+            flash('Admin account not found')
+    return render_template('requestPasswordReset.html', title='Request Password Reset', form=form)
 
 @app.route('/resetPassword/<token>', methods=['GET', 'POST'])
 def resetPassword(token):
@@ -88,19 +100,6 @@ def resetPassword(token):
         return redirect(url_for('login'))
     return render_template('resetPassword.html', title='Reset Password', form=form)
 
-@app.route('/requestreset', methods=['GET', 'POST'])
-def requestResetPassword():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    form = RequestPasswordResetForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
-        if user:
-            send_password_reset_email(user)     #invokes function defined in emails.py
-        flash('Check email for instructions to reset password')
-        return redirect(url_for('login'))
-    return render_template('requestPasswordReset.html', title='Request Password Reset', form=form)
-
 @app.route('/createsurvey', methods=['GET', 'POST'])
 def createSurvey():
     if not current_user.is_authenticated:
@@ -108,19 +107,10 @@ def createSurvey():
         return redirect(url_for('login'))
     form = CreateSurveyForm()
     if form.validate_on_submit():
-        # clear old roster and results
         wipeDatabase()
         # TODO: make multithreaded
-        # saveRoster(form.roster.data)
         parse_roster(form.roster.data)
-
-        # f_roster = form.roster.data
-        # filename = secure_filename(f_roster.filename)
-        # f_roster.save(os.path.join('documents', filename))
-        # # convert to CSV if Excel file
-        # f_roster = convertToCSV(os.path.join('documents', filename))
-
-        # Thread(target=parse_roster).start()
+        # TODO: handle corrupted file uploads
         flash('File uploaded!')
         # set default deadline to a week from upload in case admin doesn't custom input deadline on next page
         addDeadline(datetime.utcnow(), day_offset=7)
@@ -196,7 +186,7 @@ def survey():
             form.student_id.data = s_id
             form.course_id.data = c_id
     if form.validate_on_submit():
-        response_data = [form.learning_1.data, form.learning_2.data, form.learning_3.data, form.learning_4.data, form.learning_5.data, form.learning_6.data, form.lab_1.data, form.lab_2.data, form.lab_3.data, form.lab_4.data, form.lab_5.data, form.lab_6.data, form.spaceequipment_1.data, form.spaceequipment_2.data, form.spaceequipment_3.data, form.spaceequipment_4.data, form.time_1.data, form.time_2.data, form.time_3.data, form.lecture_1.data]
+        response_data = (float(form.learning_1.data), float(form.learning_2.data), float(form.learning_3.data), float(form.learning_4.data), form.learning_5.data, form.learning_6.data, float(form.lab_1.data), float(form.lab_2.data), float(form.lab_3.data), float(form.lab_4.data), float(form.lab_5.data), form.lab_6.data, float(form.spaceequipment_1.data), float(form.spaceequipment_2.data), float(form.spaceequipment_3.data), form.spaceequipment_4.data, float(form.time_1.data), float(form.time_2.data), float(form.time_3.data), form.lecture_1.data)
         addResult(form.student_id.data, form.course_id.data, response_data)
         flash('Survey submitted!')
         return redirect(url_for('survey'))

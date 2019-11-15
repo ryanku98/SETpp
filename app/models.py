@@ -57,6 +57,7 @@ def wipeDatabase():
     Result.query.delete()
     Deadline.query.delete()
     Reminder.query.delete()
+    # TODO: wipe any csv, xlsx, and xls files from documents
 
 class Section(db.Model):
     """Defines the Section database model - all created when roster is uploaded"""
@@ -70,25 +71,25 @@ class Section(db.Model):
     students = db.relationship('Student', backref='section', lazy='dynamic')
     # links Result objects to a Section object through section attribute (result.section refers to a Section)
     results = db.relationship('Result', backref='section', lazy='dynamic')
+    def __repr__(self):
+        return '<Section Course {}>'.format(self.course_id)
     def get_means(self):
-        """This function uses Pandas to analyze means of the responses linked to this Section instance"""
+        """This function uses Pandas to analyze means of the responses linked to this Section instance - returns tuple of tuples"""
         responses = []
         for result in self.results.all():
             responses.append(result.response_data)
-        df = pandas.DataFrame(responses, column=getQuestionsList())    # dataframe
-        means = df.mean().items()    # zip of data means
+        df = pandas.DataFrame(responses, columns=getQuestionsList())    # dataframe
+        means = df.mean().items()   # zip of data means
         return remove_frqs(means)
-
     def get_stds(self):
-        """This function uses Pandas to analyze standard deviations of the responses linked to this Section instance"""
+        """This function uses Pandas to analyze standard deviations of the responses linked to this Section instance - returns tuple of tuples"""
         responses = []
         for result in self.results.all():
             responses.append(result.response_data)
-        df = pandas.DataFrame(responses, column=getQuestionsList())    # dataframe
-        means = df.std().items()    # zip of data stds
-        return remove_frqs(means)
-
-    def frq_responses(self):
+        df = pandas.DataFrame(responses, columns=getQuestionsList())    # dataframe
+        stds = df.std().items()     # zip of data stds
+        return remove_frqs(stds)
+    def get_frq_responses(self):
         """
         This function returns a list of responses for the FRQs
         This format of the returned values should be a tuple of tuples as follows:
@@ -118,21 +119,18 @@ class Section(db.Model):
         >>>         answer 1-1: Byebye
         """
         responses_tuple = []    # will be converted to tuple later
-        results = self.results.query.all()
+        results = self.results.all()
         for i, question in enumerate(getQuestionsList()):
             # if index corresponds to an FRQ
             if 'free text response' in question.lower():
                 answers_tuple = []  # will be converted to tuple later
                 # add responses for question i to a list
                 for result in results:
-                    answers.append(result.response_data[i])
+                    answers_tuple.append(result.response_data[i])
                 # question_tuple = (question, tuple(answers_tuple))
                 # responses_tuple.append(question_tuple)
-                responses_tuple.append((question, tuple(answer_tuple)))
+                responses_tuple.append((question, tuple(answers_tuple)))
         return tuple(responses_tuple)
-
-    def __repr__(self):
-        return '<Section Course {}>'.format(self.course_id)
 
 def addSection(subject, course_num, course_id, prof_name, prof_email):
     section = Section.query.filter_by(course_id=course_id).first()
@@ -146,21 +144,25 @@ def addSection(subject, course_num, course_id, prof_name, prof_email):
         print('ERROR: {} cannot be added - already exists'.format(section))
 
 def remove_frqs(zip_obj):
-    """Ensures no FRQ responses get added to dataframe calculations"""
+    """Helper function for get_means() & get_stds() - ensures no FRQ responses get added to dataframe calculations and formats correctly with corresponding questions"""
     # this is required for a severe edge case when an FRQ of every result happens to be numbers only
-    indices, items = zip(*zip_obj)
-    indices = list(indices)
+    questions, items = zip(*zip_obj)
+    questions = list(questions)
     items = list(items)
-    questions = getQuestionsList()
+    # questions = getQuestionsList()
     frqs = []   # list of frqs that showed up
-    for i in indices:
-        if 'free text response' in questions[i].lower():
+    for i, question in enumerate(questions):
+        if 'free text response' in question.lower():
             frqs.append(i)
+    frqs.reverse()  # reverse so removed object doesn't affect index of next to be removed
     for i in frqs:
-        indices.pop(i)
+        questions.pop(i)
         items.pop(i)
-    # items is now a list of dataframe values corresponding to only numerical inputs of the survey form
-    return items
+    # items is now a list of dataframe values corresponding to only numerical inputs of the survey form (non-FRQs)
+    questions_tuple = []
+    for i in range(len(items)):
+        questions_tuple.append((questions[i], items[i]))
+    return tuple(questions_tuple)
 
 def getQuestionsList():
     with open(os.path.join('documents', 'survey_questions.txt'), 'r') as f_questions:
@@ -176,14 +178,14 @@ class Student(db.Model):
     s_id = db.Column(db.Integer, index=True)
     email = db.Column(db.String(120))
     # has section attribute linked to corresponding Section object
-    submitted = db.Column(db.Boolean, default=False)
+    survey_submitted = db.Column(db.Boolean, default=False)
     c_id = db.Column(db.Integer, db.ForeignKey('section.course_id'))
-    def submitted(self):
-        self.submitted = True
-    def get_survey_link(self):
-        return url_for('survey', s=self.s_id, c=self.c_id, _external=True)
     def __repr__(self):
         return '<Student ID {} - Course {} - Email {}>'.format(self.s_id, self.c_id, self.email)
+    def submitted(self):
+        self.survey_submitted = True
+    def get_survey_link(self):
+        return url_for('survey', s=self.s_id, c=self.c_id, _external=True)
 
 def addStudent(s_id, c_id, email):
     """Function to add student, ensures no repeats (same student ID and course ID)"""
@@ -216,11 +218,11 @@ class Result(db.Model):
         return '<Result Course {} - Data: {}>'.format(self.course_id, self.response_data)
 
 def addResult(s_id, c_id, response_data):
-    section = Section.query.filter_by(course_id=form.course_id.data).first()
+    section = Section.query.filter_by(course_id=c_id).first()
     student = Student.query.filter_by(s_id=s_id, c_id=c_id).first()
     if section is not None:
         result = Result(section=section, response_data=response_data)
-        if student is not None and not student.submitted:
+        if student is not None and not student.survey_submitted:
             student.submitted()
             db.session.add(result)
             db.session.commit()
@@ -228,7 +230,7 @@ def addResult(s_id, c_id, response_data):
     # the following cases (theoretically) should not happen if the form properly validates
         elif student is None:
             print('ERROR: {} cannot be added - <Student ID {} - Course {}> does not exist'.format(result, s_id, c_id))
-        elif student.submitted:
+        elif student.survey_submitted:
             print('ERROR: {} cannot be added - {} already submitted'.format(result, student))
     elif section is None:
         # should DEFINITELY never happen if student with submitted credentials can be found as per form validation
@@ -238,16 +240,16 @@ class Deadline(db.Model):
     """Defines the Deadline database model - for this instance, at most 1 Deadline should exist at any given time"""
     id = db.Column(db.Integer, primary_key=True)
     datetime = db.Column(db.DateTime, index=True, default=DT.utcnow())
+    def __repr__(self):
+        return '<Deadline {} UTC>'.format(self.default_format())
+    def default_format(self):
+        return self.datetime.strftime('%Y-%m-%dT%H:%M')
     def update_datetime(self, dt):  # assume entered dt is valid
         self.datetime = dt
     def get_datetime(self): # more legible, American format
         return '{} UTC'.format(self.datetime.strftime('%m-%d-%Y %H:%M'))
     def is_valid(self, now=DT.utcnow()):
         return is_valid_datetime(self.datetime, now)
-    def default_format(self):
-        return self.datetime.strftime('%Y-%m-%dT%H:%M')
-    def __repr__(self):
-        return '<Deadline {} UTC>'.format(self.default_format())
 
 def addDeadline(dt, day_offset=0, hour_offset=0):
     """Adds/Updates the Deadline in the database - there should always at most be only one"""
@@ -265,16 +267,16 @@ class Reminder(db.Model):
     """Defines the Reminder database model - for this application, at most 3 Reminders should exist at any given time"""
     id = db.Column(db.Integer, primary_key=True)
     datetime = db.Column(db.DateTime, index=True, default=DT.utcnow())
+    def __repr__(self):
+        return '<Reminder {}>'.format(str(self))
+    def __str__(self):
+        return self.datetime.strftime('%Y-%m-%dT%H:%M')
     def update_datetime(self, dt):  # assume entered dt is valid
         self.datetime = dt
     def get_datetime(self): # more legible, American format
         return '{} UTC'.format(self.datetime.strftime('%m-%d-%Y %H:%M'))
     def is_valid(self, now=DT.utcnow()):
         return is_valid_datetime(self.datetime, now)
-    def __str__(self):
-        return self.datetime.strftime('%Y-%m-%dT%H:%M')
-    def __repr__(self):
-        return '<Reminder {}>'.format(str(self))
 
 def addReminders(datetime_list, now):
     """Wipe database of Reminder objects and add valid datetimes from inputted list without repeats"""
@@ -293,12 +295,12 @@ def is_valid_datetime(dt1, dt2):
     # at least one attribute of delta is negative iff dt1 is before dt2 (non-negative attributes are 0)
     delta = relativedelta(dt1, dt2)
     # test for negativity in attributes:
-    # first assume invalid
-    # if hit positive value, set flag to True but continue to end
-    # if hit negative value, return False immediately and unconditionally
-    # if/when reached end, return flag (if all 0s, flag remains False)
+        # first assume invalid
+        # if hit positive value, set flag to True but continue to end
+        # if hit negative value, return False immediately and unconditionally
+        # if/when reached end, return flag (if all 0s, flag remains False)
     validity = False
-    delta_attributes = [delta.years, delta.months, delta.weeks, delta.days, delta.hours, delta.minutes, delta.seconds, delta.microseconds]
+    delta_attributes = (delta.years, delta.months, delta.weeks, delta.days, delta.hours, delta.minutes, delta.seconds, delta.microseconds)
     for attribute in delta_attributes:
         # if positive
         if attribute > 0:
