@@ -44,14 +44,13 @@ def check_dates():
         if not reminder.is_valid(now):
             # if a reminder has been sent already, other reminders that may have passed within the same interval should not trigger another reminder (and should be also removed)
             if not r_sent:
-                # TODO: CHANGE TO SEND REMINDER EMAIL
-                send_all_student_emails()
+                send_all_reminder_emails()
                 r_sent = True
             db.session.delete(reminder)
             print('Reminder {} sent.'.format(reminder))
     db.session.commit()
     if d_sent or r_sent:
-        print(log_header('') + '\nTIME NOW: {}\nDEADLINE: {}\nREMINDERS: {}'.format(now, deadline, reminders) + log_header(''))
+        print(log_header() + '\nTIME NOW: {}\nDEADLINE: {}\nREMINDERS: {}'.format(now, deadline, reminders) + log_header())
 
 print('Scheduler starting...')
 scheduler.start()

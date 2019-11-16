@@ -237,6 +237,9 @@
     {% for error in form.lecture_1.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
   </p>
 
-  <p>{{ form.submit() }}</p>
+  <p>
+    {{ form.submit() }}
+    {% for error in form.submit.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+  </p>
 </form>
 {% endblock %}

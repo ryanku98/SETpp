@@ -9,7 +9,7 @@ from time import time
 from datetime import datetime as DT
 from dateutil.relativedelta import relativedelta
 
-def log_header(title):
+def log_header(title=''):
     """Simple function to return a string of a title surrounded by dashes to represent a distinct section of log outputs"""
     if len(title) == 0:
         return '----------------------------------------------------------------------'
@@ -24,22 +24,26 @@ def log_added(obj):
     """Simple universal logging function to standarize log messages for added database objects"""
     print('ADDED {}'.format(obj))
 
-# inherits from db.Model, a base class for all models in Flask-SQLAlchemy
+def wipeAdmin():
+    """Deletes User/Admin database data"""
+    print('RESET ADMIN AT {}'.format(DT.now()))
+    User.query.delete()
+    db.session.commit()
+
 class User(UserMixin, db.Model):
     """Defines the User database model - for this instance, at most 1 User should exist at any given time"""
-    # defines fields as class variables, or instances of db.Column class, taking field type as an argument
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
     def __repr__(self):
         return '<User {}>'.format(self.email)
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+        self.password_hash = generate_password_hash(password, method='pbkdf2:sha256', salt_length=32)
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-    def get_reset_password_token(self, expires_in=600): #Encodes {info} and returns a token
+    def get_reset_password_token(self, expires_in=600): # Encodes {info} and returns a token
         return jwt.encode({'reset_password': self.id, 'exp': time() + expires_in}, app.config['SECRET_KEY'], algorithm='HS256').decode('utf-8')
-    def verify_reset_password_token(token): #Decodes token using SECRET_KEY defined in app config class
+    def verify_reset_password_token(token): # Decodes token using SECRET_KEY defined in app config class
         try:
             id = jwt.decode(token, app.config['SECRET_KEY'], algorithm=['HS256'])['reset_password']
         except:
@@ -50,7 +54,7 @@ class User(UserMixin, db.Model):
 def load_user(id):
     return User.query.get(int(id))
 
-def wipeDatabase():
+def wipeSurveyData():
     """Deletes all files and database objects related to last survey session"""
     Section.query.delete()
     Student.query.delete()
@@ -279,7 +283,7 @@ class Reminder(db.Model):
         return is_valid_datetime(self.datetime, now)
 
 def addReminders(datetime_list, now):
-    """Wipe database of Reminder objects and add valid datetimes from inputted list without repeats"""
+    """Wipe database of Reminder objects and add valid datetimes from inputted tuple/list without repeats"""
     Reminder.query.delete()
     for dt in datetime_list:
         if is_valid_datetime(dt, now) and Reminder.query.filter_by(datetime=dt).count() == 0:

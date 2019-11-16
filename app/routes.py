@@ -3,12 +3,11 @@ import csv
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import current_user, login_user, logout_user, login_required
 from app import app, db
-from app.models import User, Student, Section, Result, Deadline, Reminder, log_header, wipeDatabase, studentExists, addResult, addDeadline, addReminders
-from app.forms import LoginForm, RegistrationForm, ResetPasswordForm, RequestPasswordResetForm, ChangePasswordForm, CreateSurveyForm, DatesForm, SurveyForm
+from app.models import User, Student, Section, Result, Deadline, Reminder, log_header, wipeAdmin, wipeSurveyData, studentExists, addResult, addDeadline, addReminders
+from app.forms import LoginForm, RegistrationForm, ResetPasswordForm, RequestPasswordResetForm, ChangePasswordForm, CreateSurveyForm, DatesForm, SurveyForm, OverrideForm
 from app.survey import parse_roster
-from app.emails import send_password_reset_email, send_all_student_emails, send_all_prof_emails
+from app.emails import send_password_reset_email, send_all_student_emails, send_all_reminder_emails, send_all_prof_emails
 from datetime import datetime
-from threading import Thread
 
 @app.route('/')
 @app.route('/index')
@@ -22,6 +21,9 @@ def index():
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
+    if User.query.count() == 0:
+        # redirect to registration page if no admin users
+        return redirect(url_for('register'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
@@ -41,8 +43,8 @@ def logout():
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
-    if User.query.count() != 0:
-        flash('Redirected to login page: An admin already exists for this system. Please login for admin privileges.')
+    if User.query.count() > 0:
+        flash('Redirected to login page: An admin already exists for this system. If you are the admin, please login for admin privileges.')
         return redirect(url_for('login'))
     form = RegistrationForm()
     if form.validate_on_submit():
@@ -55,19 +57,14 @@ def register():
     return render_template('register.html', title='Register', form=form)
 
 @app.route('/changePassword', methods=['GET', 'POST'])
+@login_required
 def changePassword():
-    if not current_user.is_authenticated:
-        return redirect(url_for('login'))
     form = ChangePasswordForm()
     if form.validate_on_submit():
-        if current_user.check_password(form.current_password.data):
-            current_user.set_password(form.password.data)
-            db.session.add(current_user)
-            db.session.commit()
-            flash('Password updated')
-        else:
-            flash('Incorrect password')
-            return redirect(url_for('changePassword'))
+        current_user.set_password(form.password.data)
+        db.session.add(current_user)
+        db.session.commit()
+        flash('Password updated')
     return render_template('changePassword.html', title='Change Password', form=form)
 
 @app.route('/requestreset', methods=['GET', 'POST'])
@@ -100,22 +97,21 @@ def resetPassword(token):
         return redirect(url_for('login'))
     return render_template('resetPassword.html', title='Reset Password', form=form)
 
-@app.route('/createsurvey', methods=['GET', 'POST'])
-def createSurvey():
+@app.route('/upload', methods=['GET', 'POST'])
+def upload():
     if not current_user.is_authenticated:
         flash('Login to create survey!')
         return redirect(url_for('login'))
     form = CreateSurveyForm()
     if form.validate_on_submit():
-        wipeDatabase()
-        # TODO: make multithreaded
+        wipeSurveyData()
         parse_roster(form.roster.data)
         # TODO: handle corrupted file uploads
         flash('File uploaded!')
         # set default deadline to a week from upload in case admin doesn't custom input deadline on next page
         addDeadline(datetime.utcnow(), day_offset=7)
         return redirect(url_for('setDates'))
-    return render_template('createSurvey.html', title='Create Survey', form=form)
+    return render_template('upload.html', title='Create Survey', form=form)
 
 @app.route('/deadline', methods=['GET', 'POST'])
 def setDates():
@@ -125,53 +121,62 @@ def setDates():
         return redirect(url_for('login'))
     form = DatesForm()
     # track time on page load for validation purposes
-    curr_time = datetime.utcnow()
+    now = datetime.utcnow()
     if form.validate_on_submit():
         # DatesForm class validates deadline data upon submission
         addDeadline(form.deadline.data)
-        addReminders([form.reminder1.data, form.reminder2.data, form.reminder3.data], now)
+        addReminders((form.reminder1.data, form.reminder2.data, form.reminder3.data), now)
         return redirect(url_for('setDates'))
-    return render_template('dates.html', title='Deadline & Reminders', form=form, time=curr_time, defaults=create_defaults(curr_time))
+    return render_template('dates.html', title='Deadline & Reminders', form=form, time=now, defaults=create_defaults(now))
 
 def create_defaults(curr_time):
     """Creates list of datetime strings using values currently in database - for values that don't exist, use current time"""
     # defaults should be a list of defaults for variables in proper string form in the following order: deadline, reminder1, reminder2, reminder3
-    default_format = '%Y-%m-%dT%H:%M'
     defaults = []
+    default_format = '%Y-%m-%dT%H:%M'
     deadline = Deadline.query.first()
     if deadline is not None:
         defaults.append(deadline.default_format())
     else:
         defaults.append(curr_time.strftime(default_format))
-    reminders = Reminder.query.all()
+    reminders = Reminder.query.order_by(Reminder.datetime).all()
     for reminder in reminders:
         defaults.append(str(reminders[0]))
-    # fill in to exactly 3 datetimes
+    # fill in to exactly 4 datetimes
     while len(defaults) < 4:
         defaults.append(curr_time.strftime(default_format))
     return defaults
 
 # TODO: remove when done testing
-@app.route('/startsurvey')
+@app.route('/emailallstudents')
 @login_required
-def startSurvey():
-    flash('Survey session started')
-    send_all_student_emails()
+def emailallstudents():
+    if Student.query.count() >= 1:
+        flash('All students emailed')
+        send_all_student_emails()
+    else:
+        flash('No students found in database - please upload valid roster')
     return redirect(url_for('index'))
 
 # TODO: remove when done testing
-@app.route('/sendAnalytics')
+@app.route('/emailallprofessors')
 @login_required
-def sendAnalytics():
-    send_all_prof_emails()
-    flash('Analytics Sent')
+def emailallprofessors():
+    if Section.query.count() >= 1:
+        send_all_prof_emails()
+        flash('All professors emailed')
+    else:
+        flash('No professors found in database - please upload valid roster')
     return redirect(url_for('index'))
 
-@app.route('/sendReminder')
+@app.route('/remindallstudents')
 @login_required
-def sendReminder():
-    send_all_student_emails()
-    flash('Reminder Emails Sent')
+def remindallstudents():
+    if Student.query.count() >= 1:
+        flash('All students emailed reminder')
+        send_all_reminder_emails()
+    else:
+        flash('No students found in database - please upload valid roster')
     return redirect(url_for('index'))
 
 @app.route('/survey', methods=['GET', 'POST'])
@@ -186,8 +191,25 @@ def survey():
             form.student_id.data = s_id
             form.course_id.data = c_id
     if form.validate_on_submit():
+        # numerical data has to be type-casted here - WTForms doesn't allow numerical choices (must be str type) but pandas sometimes doesn't properly calculate statistics if entered values are in str form
         response_data = (float(form.learning_1.data), float(form.learning_2.data), float(form.learning_3.data), float(form.learning_4.data), form.learning_5.data, form.learning_6.data, float(form.lab_1.data), float(form.lab_2.data), float(form.lab_3.data), float(form.lab_4.data), float(form.lab_5.data), form.lab_6.data, float(form.spaceequipment_1.data), float(form.spaceequipment_2.data), float(form.spaceequipment_3.data), form.spaceequipment_4.data, float(form.time_1.data), float(form.time_2.data), float(form.time_3.data), form.lecture_1.data)
         addResult(form.student_id.data, form.course_id.data, response_data)
         flash('Survey submitted!')
         return redirect(url_for('survey'))
     return render_template('survey.html', title='SET++', form=form, deadline=Deadline.query.first(), time=datetime.utcnow())
+
+@app.route('/OVERRIDE', methods=['GET', 'POST'])
+def override():
+    if User.query.count() == 0:
+        return redirect(url_for('index'))
+    form = OverrideForm()
+    if form.validate_on_submit():
+        if form.password.data == app.config['OVERRIDE_PW']:
+            print(log_header('OVERRIDE - {}'.format(form.dev_id.data)))
+            wipeAdmin()
+            flash('Admin data erased')
+            return redirect(url_for('register'))
+        else:
+            flash('Incorrect password')
+    return render_template('override.html', title='DEVELOPER OVERRIDE', form=form)
+

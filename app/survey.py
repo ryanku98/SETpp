@@ -2,7 +2,7 @@ import os
 import csv
 import xlrd
 from app import db
-from app.models import log_header, wipeDatabase, addSection, addStudent
+from app.models import log_header, addSection, addStudent
 from werkzeug.utils import secure_filename
 from threading import Thread
 
@@ -33,6 +33,7 @@ def parse_roster(form_roster_data):
     elif ext == '.csv':
         os.rename(filename, csv_filepath)
 
+    # indices as expected by the given SCU roster template
     c_id_i_roster = 1
     subject_i_roster = 2
     course_i_roster = 3
@@ -62,5 +63,4 @@ def parse_roster(form_roster_data):
             s_id = removeZeroes(row[s_id_i_roster])
             stud_email = row[stud_email_i_roster]
             Thread(target=addStudent, args=(s_id, c_id, stud_email)).start()
-            # addStudent(s_id, c_id, stud_email)
     os.remove(csv_filepath)

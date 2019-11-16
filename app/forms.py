@@ -1,13 +1,14 @@
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileRequired, FileAllowed
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, FileField, IntegerField, RadioField, TextAreaField
 from wtforms.ext.dateutil.fields import DateTimeField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length
-from flask_wtf.file import FileRequired, FileAllowed
+from app import app
 from app.models import User, Section, Student, Result, Deadline, Reminder, is_valid_datetime
 from datetime import datetime
 
 class LoginForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
     remember_me = BooleanField('Remember Me')
     submit = SubmitField('Sign In')
@@ -31,13 +32,17 @@ class ChangePasswordForm(FlaskForm):
     password2 = PasswordField('Repeat New Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Change password')
 
-class ResetPasswordForm(FlaskForm):
-    password = PasswordField('New Password', validators=[DataRequired()])
-    password2 = PasswordField('Repeat New Password', validators=[DataRequired(), EqualTo('password')])
-    submit = SubmitField('Request Password Reset')
+    def validate_current_password(self, current_password):
+        if not current_user.check_password(self.current_password.data):
+            raise ValidationError('Incorrect password.')
 
 class RequestPasswordResetForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Request Password Reset')
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('New Password', validators=[DataRequired()])
+    password2 = PasswordField('Repeat New Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Reset')
 
 class CreateSurveyForm(FlaskForm):
@@ -69,7 +74,6 @@ class SurveyForm(FlaskForm):
     scale_choices = [('1','1'), ('2','2'), ('3','3'), ('4','4'), ('5','5')]
     time_choices = [('1.5','<2'), ('2','2'), ('2.5','2.5'), ('3','3'), ('3.5','>3')]
     max_length = 2000
-    # TODO: fix time values to be officially entered as integers for proper data analysis
     learning_1 = RadioField('The labs helped me understand the lecture material. (An answer of 3 is neutral)', choices=scale_choices, validators=[DataRequired()])
     learning_2 = RadioField('The labs taught me new skills. (An answer of 3 is neutral)', choices=scale_choices, validators=[DataRequired()])
     learning_3 = RadioField('The labs taught me to think creatively. (An answer of 3 is neutral)', choices=scale_choices, validators=[DataRequired()])
@@ -109,3 +113,11 @@ class SurveyForm(FlaskForm):
         if deadline is not None and not deadline.is_valid():
             raise ValidationError('Sorry, the deadline for this survey session has already passed.')
 
+class OverrideForm(FlaskForm):
+    dev_id = StringField('ID', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    submit = SubmitField('Reset')
+
+    def validate_dev_id(self, dev_id):
+        if not self.dev_id.data in app.config['DEVELOPERS']:
+            raise ValidationError('Please enter a valid developer ID.')
