@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!-- <!DOCTYPE html> -->
 
 {% extends 'bootstrap/base.html' %}
@@ -74,3 +75,42 @@
     {% block content %}{% endblock %}
   </body>
 </html>
+=======
+<!-- <!DOCTYPE html> -->
+<html lang="en" dir="ltr">
+  <head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="utf-8">
+    {% if title %}
+    <title>{{ title }} - SETpp</title>
+    {% else %}
+    <title>Welcome to SETpp!</title>
+    {% endif %}
+  </head>
+  <body>
+    <nav>
+      SETpp:
+      <a href="{{ url_for('override') }}">Override</a>
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('index') }}">Admin Home</a>
+        <a href="{{ url_for('logout') }}">Admin Logout</a>
+        <a href="{{ url_for('changePassword') }}">Change Password</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">Admin Login</a>
+      {% endif %}
+      <a href="{{ url_for('survey') }}">Lab Evaluation</a>
+    </nav>
+    <hr>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <ul>
+      {% for message in messages %}
+      <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </body>
+</html>
+>>>>>>> db-only

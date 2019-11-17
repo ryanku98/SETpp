@@ -1,11 +1,24 @@
-Hi Professor {},
-Here are your TA's teaching evaluations for {}{} - {}:
+Hi Professor {{ section.prof_name }},
 
-MEANS
-{}
+Here are your TA's teaching evaluations for {{ section.subject + section.course_num }} - Section {{ section.course_id }}:
 
-STANDARD deviations
-{}
+AVERAGES
+{% for my_tuple in section.get_means() %}
+{{ my_tuple[0] }}: {{ '{:.3f}'.format(my_tuple[1]) }}
+{% endfor %}
 
-FREE RESPONSE
-{}
+STANDARD DEVIATIONS
+{% for my_tuple in section.get_stds() %}
+{{ my_tuple[0] }}: {{ '{:.3f}'.format(my_tuple[1]) }}
+{% endfor %}
+
+FREE RESPONSES
+{% for i, question_tuple in enumerate(section.get_frq_responses()) %}
+{{ i + 1 }}. {{ question_tuple[0] }}
+  {% for response in question_tuple[1] %}
+  - {{ response }}
+  {% endfor %}
+{% endfor %}
+
+Sincerely,
+The SET++ Team

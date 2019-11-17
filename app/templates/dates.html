@@ -27,7 +27,7 @@
     {{ form.reminder3(value=defaults[3]) }}<br>
     {% for error in form.reminder3.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
   </p>
-  <p>Reminders set before the current time will be ignored.</p>
+  <p>Any reminders set before the current time or after the deadline will be ignored.</p>
   <p>
     {{ form.submit() }}
   </p>

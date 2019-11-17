@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {% extends "base.html" %}
 
 {% block content %}
@@ -23,3 +24,15 @@
 
 
 {% endblock %}
+=======
+{% extends "base.html" %}
+
+{% block content %}
+<h1>home page here</h1>
+<a href="{{ url_for('upload') }}">Upload roster</a>
+<a href="{{ url_for('emailallstudents') }}">Email all students (dev)</a>
+<a href="{{ url_for('emailallprofessors') }}">Send professor emails (dev)</a>
+<a href="{{ url_for('setDates') }}">Deadline & Reminders</a>
+<p>Clicking "start survey session" sends out emails to students on the roster</p>
+{% endblock %}
+>>>>>>> db-only
