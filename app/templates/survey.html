@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block content %}
+{% block app_content %}
 <h1>SETpp Survey</h1>
 {% if not deadline or not deadline.is_valid(time) %}
 <p>WARNING: The deadline for this survey session has ended!</p>
