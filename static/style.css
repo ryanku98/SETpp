@@ -1,11 +1,9 @@
 body {
     background-color: linen;
-    margin-left: 30;
 }
 
-nav {
-    margin-left: 30
-    margin: 30
+#app {
+    margin-left: 30px;
 }
 
 h1 {
@@ -13,9 +11,15 @@ h1 {
 }
 
 nav#bar {
+    margin-left: 0px !important
     background-color: linen;
 }
 
+nav.navbar.navbar-default {
+    background-color: linen;
+    border-color: darkred;
+}
+
 .container {
-    margin-left: 0;
+    margin-left: 0px !important;
 }

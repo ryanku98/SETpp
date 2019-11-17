@@ -9,15 +9,6 @@
 
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
 
-  <head>
-    <meta charset="utf-8">
-    {% if title %}
-    <title>{{ title }} - SETpp</title>
-    {% else %}
-    <title>Welcome to SETpp!</title>
-    {% endif %}
-  </head>
-
   <nav class="navbar navbar-default">
       <div class="container">
           <div class="navbar-header">
@@ -41,19 +32,24 @@
 
               <ul class="nav navbar-nav navbar-right">
                   {% if current_user.is_authenticated %}
-                  <li> <a href="{{ url_for('logout') }}">Admin Logout</a>  </li>
+                  <li> <a href="{{ url_for('changePassword') }}">Change Password</a> </li>
+                  <li> <a href="{{ url_for('logout') }}">Admin Logout</a> </li>
                   {% endif %}
               </ul>
           </div>
       </div>
   </nav>
 
+  <head>
+    <meta charset="utf-8">
+    {% if title %}
+    <title>{{ title }} - SETpp</title>
+    {% else %}
+    <title>Welcome to SETpp!</title>
+    {% endif %}
+  </head>
+
   <body>
-    <nav>
-      {% if current_user.is_authenticated %}
-      <a href="{{ url_for('changePassword') }}">Change Password</a>
-      {% endif %}
-    </nav>
     <hr>
     {% with messages = get_flashed_messages() %}
     {% if messages %}
@@ -64,7 +60,11 @@
     </ul>
     {% endif %}
     {% endwith %}
-    {% block app_content %}{% endblock %}
+    <div style="margin-left: 40px;">
+        <app id="app">
+            {% block app_content %}{% endblock %}
+        </app>
+    </div>
   </body>
 </html>
 {% endblock %}
