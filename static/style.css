@@ -1,11 +1,21 @@
 body {
     background-color: linen;
+    margin-left: 30;
+}
+
+nav {
+    margin-left: 30
+    margin: 30
 }
 
 h1 {
   color: darkred;
 }
 
-element {
-    margin-left: 30px;
+nav#bar {
+    background-color: linen;
+}
+
+.container {
+    margin-left: 0;
 }
