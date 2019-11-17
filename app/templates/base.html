@@ -23,7 +23,7 @@
           <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
               <ul class="nav navbar-nav">
                   {% if current_user.is_authenticated %}
-                  <li> <a href="{{ url_for('upload') }}">Upload Survey</a> </li>
+                  <li> <a href="{{ url_for('upload') }}">Upload Roster</a> </li>
                   <li> <a href="{{ url_for('emailallstudents') }}">Send Surveys</a> </li>
                   <li> <a href="{{ url_for('emailallprofessors') }}">Send Results</a> </li>
                   <li> <a href="{{ url_for('setDates') }}">Deadline & Reminders</a> </li>

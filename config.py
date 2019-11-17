@@ -17,3 +17,4 @@ class Config(object):
     DEVELOPERS = ('a1morales', 'eejohnson', 'rku')
     # key to wipe entire database (mainly to make it easy for devs when deployed on a cloud platform)
     OVERRIDE_PW = os.environ.get('OVERRIDE_PW') or 'super-secret-override-pw'
+    LOG_TO_STDOUT = os.environ.get('LOG_TO_STDOUT')
