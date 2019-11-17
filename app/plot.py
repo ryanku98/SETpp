@@ -1,12 +1,14 @@
 import datetime
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
+import matplotlib
 import matplotlib.pyplot as plt
 import os
 import subprocess
-from survey import Section, fr_ids
+from app.survey import Section, fr_ids
 import pandas as pd
-
+import statistics
+import collections
 
 
 
@@ -25,20 +27,37 @@ class PDFPlotter:
         self.section = section
         self.file = file_path+file
 
+
     def createPDF(self):
+        """Creates a Multipage PDF"""
         print(self.file)
-        os.remove(self.file)
+        df = pd.DataFrame.from_records(self.section.data)
+        print(self.section.fr_list)
+        # os.remove(self.file)
         with PdfPages(self.file) as pdf:
             fp_questions = open(questions_path, 'r')
-            for i in range(2, len(self.section.data[0])):
-                line = fp_questions.readline() # read line of questions file
+            self.createCover(self.section.course_id, pdf) # builds cover page for pdf
+            figs = plt.figure(figsize=(10,10))
+            graph_vals = []
+            for i in (range(2, len(self.section.data[0]))):
+
                 if i not in fr_ids:
-                    x = pd.to_numeric(self.section.df[i])
-                    self.generatePlot(pdf,line,x)
-                    self.generateStatistics(pdf,x)
+                    graph_vals.append( df[i] )
+                    # self.generateStatistics(pdf,x)
                 else:
-                    self.generateFreeResponse(pdf)
+                    if len(graph_vals) > 0:
+                        self.generatePlots(pdf,fp_questions,graph_vals)
+                        plt.subplots_adjust(left=.15,right=0.75,wspace=0.7, hspace=.25*len(graph_vals))
+                        pdf.savefig(figs)
+                        plt.close()
+
+                        graph_vals = [] #reset histogram arguments
+                        figs = plt.figure(figsize=(10,10))
+
+                    self.generateFreeResponse(pdf,fp_questions.readline(),fr_ids.index(i))
+
                 print("DATA "+str(i))
+
             fp_questions.close()
             # We can also set the file's metadata via the PdfPages object:
             d = pdf.infodict()
@@ -49,40 +68,56 @@ class PDFPlotter:
             d['CreationDate'] = datetime.datetime(2009, 11, 13)
             d['ModDate'] = datetime.datetime.today()
 
-    def generatePlot(self, pdf, question, x):
-        fig = plt.figure(figsize=(8, 6))
-        plt.hist(x.values, bins=[1,2,3,4,5], density=True)
-        plt.title("Question: "+question)
-        pdf.savefig()  # saves the current figure into a pdf page
-        plt.close()
-
-    def generateStatistics(self, pdf, x):
-        # if LaTeX is not installed or error caught, change to `usetex=False`
-        firstPage = plt.figure(figsize=(8,6))
-        firstPage.clf()
-        txt = 'Statistics:'
-        firstPage.text(0.25,0.5,txt, transform=firstPage.transFigure, size=24, ha="center")
-        txt = 'Mean: '+str(x.mean())
-        firstPage.text(0.25,0.4,txt, transform=firstPage.transFigure, size=16, ha="center")
-        pdf.savefig()
-        plt.close()
-
-    def generateFreeResponse(self, pdf):
-        numResponses = len(self.section.fr_list)
-        print(numResponses)
-        page = plt.figure(figsize=(8,6))
+    def createCover(self, course_id, pdf):
+        """Method to create the cover page of the result pdf"""
+        page = plt.figure(figsize=(10,10))
         page.clf()
-        for i in range(numResponses):
-            page.text(0.1,(0.5-float(i/20)), str(self.section.fr_list), transform=page.transFigure, size=10, ha="left")
+        txt = "Evaluation Results for course "+course_id
+        page.text(0.5, 0.5, txt, transform=page.transFigure, bbox=dict(facecolor='red', alpha=0.5), size=35, ha="center")
         pdf.savefig()
         plt.close()
 
+    def generatePlots(self, pdf, questions, graph_vals):
+        """Method to generate plots all on one page of PDF"""
+        grid = len(graph_vals)*100+11
+        for i in range(len(graph_vals)):
+            question = questions.readline()
+            ax = plt.subplot(grid+i)
+            if "hours" in question:
+                x = graph_vals[i].values
+                counter = collections.Counter(x)
+                label = ["<2","2","2.5","3",">3"]
+                for l in label:
+                    if l not in counter:
+                        counter[l] = 0
+                scalars = list(counter.values())
+                labels = list(counter.keys())
+                print(str(scalars)+" "+str(labels))
+                plt.bar(x=labels, height=scalars, width=0.8, tick_label=labels)
+                plt.xlabel('Time Spent (Hours)')
+            else:
+                x = pd.to_numeric(graph_vals[i]).values
+                plt.hist(x, rwidth=0.8, range=(1,5), bins=[0.5,1.5,2.5,3.5,4.5,5.5], density=True)
+                plt.xlabel('Rating')
+                txt = "mean: "+str(statistics.mean(map(float, x) ) ) + "\nmedian: "+str(statistics.median(x))
+                ax.text(6.5, 0.0, txt,
+                      bbox=dict(facecolor='red', alpha=0.5),
+                      horizontalalignment='center',
+                      verticalalignment='center')
 
+            plt.ylabel('Frequency')
+            # ax.yaxis.set_major_formatter(PercentFormatter(xmax=1))
+            plt.title("Question: "+question, size=10)
 
-
-# data = [['eejohnson@scu.edu',83505,1,1,1,1,'asdf','asdf',1,1,1,1,1,'asdf',1,3,1,'asdf',2.5,2.5,2.5,'asdf'],
-# ['eejohnson@scu.edu',83505,2,1,1,1,'asdf','asdf',1,1,1,5,1,'asdf',1,1,1,'asdf',2.5,2.5,2.5,'asdf'],
-# ['eejohnson@scu.edu',83505,2,1,3,3,'asdf','asdf',1,1,4,1,1,'asdf',1,2,1,'asdf',2.5,2.5,2.5,'asdf'],
-# ['eejohnson@scu.edu',83505,2,1,3,3,'asdf','asdf',1,1,4,1,1,'asdf',1,1,1,'asdf',2.5,3,2.5,'asdf']]
-# section = Section(83505, data)
-# section.get_section_stats()
+    def generateFreeResponse(self, pdf, question, index):
+        """Method to generate free response answers on the PDF"""
+        responses = self.section.fr_list[index]
+        numResponses = len(responses)
+        page = plt.figure(figsize=(10,10))
+        page.clf()
+        page.text(0.075, 0.90, "Question: "+question, transform=page.transFigure, bbox=dict(facecolor='blue', alpha=0.3), size=8, ha="left")
+        page.text(0.1, 0.875, "Student Responses:", transform=page.transFigure, bbox=dict(facecolor='blue', alpha=0.3), size=8, ha="left")
+        for i in range(numResponses):
+            page.text(0.15, 0.85-i*.05, str(responses[i]), transform=page.transFigure, bbox=dict(facecolor='green', alpha=0.2), size=7, ha="left")
+        pdf.savefig()
+        plt.close()
