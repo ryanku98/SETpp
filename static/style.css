@@ -31,9 +31,12 @@ navbar-nav a {
 }
 
 #seal {
-    width: 10%;
-    height: 10%;
+    width: 8%;
+    /* height: 10%; */
     display: block;
-    float: right;
-    margin-right: 3%;
+    /* float: right;
+    margin-right: 3%; */
+    position: fixed;
+    right: 3%;
+    top: 8%;
 }
