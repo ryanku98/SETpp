@@ -50,7 +50,6 @@
   </head>
 
   <body>
-    <hr>
     {% with messages = get_flashed_messages() %}
     {% if messages %}
     <ul style="list-style-type:none;">
@@ -61,6 +60,7 @@
     {% endif %}
     {% endwith %}
     <div style="margin-left: 40px;">
+        <img src="{{ url_for('static', filename='scu.png') }}" id="seal">
         <app id="app">
             {% block app_content %}{% endblock %}
         </app>
