@@ -10,6 +10,12 @@ h1 {
   color: darkred;
 }
 
+#bottom {
+    position: fixed;
+    bottom: 1%;
+    left: 2%;
+}
+
 nav#bar {
     margin-left: 0px !important
     background-color: linen;
@@ -32,10 +38,7 @@ navbar-nav a {
 
 #seal {
     width: 8%;
-    /* height: 10%; */
     display: block;
-    /* float: right;
-    margin-right: 3%; */
     position: fixed;
     right: 3%;
     top: 8%;
