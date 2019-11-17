@@ -35,29 +35,34 @@ def check_dates():
     deadline = Deadline.query.first()
     reminders = Reminder.query.order_by(Reminder.datetime).all()
     # if deadline exists, check if already passed
-    if deadline is not None:
-        if not deadline.is_valid(now):
-            # send results and delete deadline
+    if deadline is not None and not deadline.is_valid(now) and not deadline.executed:
+        # send results
+        # app.app_context() needed because Flask can't retrieve app context for Jinja's render_template() when this is called here
+        print(log_header('AUTOMATED EMAILS'))
+        with app.app_context():
             send_all_prof_emails()
-            d_sent = True
+            deadline.executed = True
+            db.session.commit()
+        d_sent = True
+    else:
+        print(deadline.executed)
     for reminder in reminders:
         if not reminder.is_valid(now):
+            # if no emails have been sent yet
+            if not d_sent and not r_sent:
+                print(log_header('AUTOMATED EMAILS'))
             # if a reminder has been sent already, other reminders that may have passed within the same interval should not trigger another reminder (and should be also removed)
             if not r_sent:
-                send_all_reminder_emails()
+                # app.app_context() needed because Flask can't retrieve app context for Jinja's render_template() when this is called here
+                with app.app_context():
+                    send_all_reminder_emails()
                 r_sent = True
-            db.session.delete(reminder)
-            print('Reminder {} sent.'.format(reminder))
-    db.session.commit()
-    if d_sent or r_sent:
-        print(log_header() + '\nTIME NOW: {}\nDEADLINE: {}\nREMINDERS: {}'.format(now, deadline, reminders) + log_header())
+            with app.app_context():
+                db.session.delete(reminder)
+                db.session.commit()
 
 print('Scheduler starting...')
 scheduler.start()
 # shut down schedule when app exits
 atexit.register(lambda: scheduler.shutdown())
 # END OF SCHEDULER CODE
-
-# if __name__ == '__main__':
-#     print('Scheduler starting...')
-#     scheduler.start()

@@ -23,6 +23,7 @@ def login():
         return redirect(url_for('index'))
     if User.query.count() == 0:
         # redirect to registration page if no admin users
+        flash('Redirected to registration page: An admin does not exist for this system. Please register for admin privileges.')
         return redirect(url_for('register'))
     form = LoginForm()
     if form.validate_on_submit():
@@ -201,7 +202,7 @@ def survey():
 @app.route('/OVERRIDE', methods=['GET', 'POST'])
 def override():
     if User.query.count() == 0:
-        return redirect(url_for('index'))
+        return redirect(url_for('login'))
     form = OverrideForm()
     if form.validate_on_submit():
         if form.password.data == app.config['OVERRIDE_PW']:
