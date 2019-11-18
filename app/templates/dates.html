@@ -8,7 +8,7 @@
   {{ form.hidden_tag() }}
   {# NOTE: type="datetime-local" is not recognized by Safari on MAC OSX, but is recognized by Safari on iOS :/ #}
   <p>
-    {{ form.deadline.label }}<br>
+    {{ form.deadline.label }} (By default, this is set to one week after upload.)<br>
     {{ form.deadline(value=defaults[0]) }}<br>
     {% for error in form.deadline.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
   </p>
