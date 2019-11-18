@@ -186,8 +186,6 @@ class Student(db.Model):
     c_id = db.Column(db.Integer, db.ForeignKey('section.course_id'))
     def __repr__(self):
         return '<Student ID {} - Course {} - Email {}>'.format(self.s_id, self.c_id, self.email)
-    def submitted(self):
-        self.survey_submitted = True
     def get_survey_link(self):
         return url_for('survey', s=self.s_id, c=self.c_id, _external=True)
 
@@ -227,7 +225,7 @@ def addResult(s_id, c_id, response_data):
     if section is not None:
         result = Result(section=section, response_data=response_data)
         if student is not None and not student.survey_submitted:
-            student.submitted()
+            student.survey_submitted = True
             db.session.add(result)
             db.session.commit()
             log_added(result)
@@ -244,12 +242,14 @@ class Deadline(db.Model):
     """Defines the Deadline database model - for this instance, at most 1 Deadline should exist at any given time"""
     id = db.Column(db.Integer, primary_key=True)
     datetime = db.Column(db.DateTime, index=True, default=DT.utcnow())
+    executed = db.Column(db.Boolean, default=False) # True if professors have been emailed statistics triggered by passing the deadline
     def __repr__(self):
         return '<Deadline {} UTC>'.format(self.default_format())
     def default_format(self):
         return self.datetime.strftime('%Y-%m-%dT%H:%M')
     def update_datetime(self, dt):  # assume entered dt is valid
         self.datetime = dt
+        self.executed = False   # reset flag
     def get_datetime(self): # more legible, American format
         return '{} UTC'.format(self.datetime.strftime('%m-%d-%Y %H:%M'))
     def is_valid(self, now=DT.utcnow()):

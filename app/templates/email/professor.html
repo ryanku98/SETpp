@@ -2,16 +2,26 @@
 
 <p>Here are your TA's teaching evaluations for {{ section.subject + section.course_num }} - Section {{ section.course_id }}:</p>
 
+<p>SUBMISSIONS: {{ section.results.count() }}/{{ section.students.count() }}</p>
+
+{% if section.results.count() == 0 %}
+<p>Unfortunately, statistics could not be calculated due to lack of submissions.</p>
+{% else %}
 <p>AVERAGES<br>
 {% for my_tuple in section.get_means() %}
-{{ my_tuple[0] }}: {{ '{:.3f}'.format(my_tuple[1]) }}<br>
+  {{ my_tuple[0] }}: {{ '{:.3f}'.format(my_tuple[1]) }}<br>
 {% endfor %}
 </p>
 
 <p>STANDARD DEVIATIONS<br>
-{% for my_tuple in section.get_stds() %}
-{{ my_tuple[0] }}: {{ '{:.3f}'.format(my_tuple[1]) }}<br>
-{% endfor %}
+{# STDs for population of 1 is a divide-by-0 error, so don't report #}
+{% if section.results.count() == 1 %}
+  N/A - only 1 submission
+{% else %}
+  {% for my_tuple in section.get_stds() %}
+  {{ my_tuple[0] }}: {{ '{:.3f}'.format(my_tuple[1]) }}<br>
+  {% endfor %}
+{% endif %}
 </p>
 
 <p>FREE RESPONSES<br>
@@ -23,6 +33,7 @@
   <br>
 {% endfor %}
 </p>
+{% endif %}
 
 <p>Sincerely,</p>
 <p>The SET++ Team</p>
