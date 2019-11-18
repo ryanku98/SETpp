@@ -39,7 +39,7 @@ def send_student_msg(student, reminder=False):
         msg.attach(MIMEText(text_body, 'plain'))
         msg.attach(MIMEText(html_body, 'html'))
         try:
-            Thread(target=send_email, args=(msg,)).start()
+            Thread(target=send_email, args=(current_app._get_current_object(), msg)).start()
             print('EMAIL: {}'.format(student))
         except: # applies better error handling and avoids issue of both EMAIL log and EMAIL ERROR log printing
             pass
@@ -88,7 +88,6 @@ def send_prof_msg(section, file=None):
         msg.attach(p)
 
     try:
-        # with app.app_context():
         Thread(target=send_email, args=(current_app._get_current_object(), msg)).start()
         print('EMAIL: <Professor {} - Email {}>'.format(section.prof_name, section.prof_email))
     except: # applies better error handling and avoids issue of both EMAIL log and EMAIL ERROR log printing
