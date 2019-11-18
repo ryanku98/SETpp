@@ -62,7 +62,7 @@ def send_all_reminder_emails():
             # cannot multithread here because it breaks some Jinja2 context that breaks render_template() inside the thread for some reason
             send_student_msg(student, True)
 
-def send_prof_msg(section, file):
+def send_prof_msg(section, file=None):
     """This function creates and sends a personalized statistics email to the professor represented by the section object passed in"""
     msg = MIMEMultipart('alternative')
     msg['To'] = section.prof_email
@@ -73,16 +73,18 @@ def send_prof_msg(section, file):
     msg.attach(MIMEText(text_body, 'plain'))
     msg.attach(MIMEText(html_body, 'html'))
 
-    """Create PDF Attachment"""
-    with open(file, "rb") as attachment:
-        p = MIMEBase('application', 'octet-stream')
-        p.set_payload((attachment).read())
-    encoders.encode_base64(p) # encode binary data into base64 - printable ASCII characters
-    p.add_header(
-        "Content-Disposition",
-        f"attachment; filename= {file}",
-    )
-    msg.attach(p)
+    # only attmpt to open if one was created (at least 1 result was submitted)
+    if file is not None:
+        # create PDF attachment
+        with open(file, 'rb') as attachment:
+            p = MIMEBase('application', 'octet-stream')
+            p.set_payload((attachment).read())
+        encoders.encode_base64(p) # encode binary data into base64 - printable ASCII characters
+        p.add_header(
+            'Content-Disposition',
+            f'attachment; filename= {file}',
+        )
+        msg.attach(p)
 
     try:
         Thread(target=send_email, args=(msg,)).start()
@@ -94,15 +96,15 @@ def send_all_prof_emails():
     """This function sends emails with individualized statistics to *all* professors in the database (represented as sections)"""
     print(log_header('PROFESSOR EMAILS'))
     for section in Section.query.all():
-        # cannot multithread here because it breaks some Jinja2 context that breaks render_template() inside the thread for some reason
-        df = []
-
-        for result in section.results.all():
-            df.append( list(result.response_data) )
-        print(df)
-        pdf = PDFPlotter(df, section.course_id)
-        pdf.createPDF()
-        send_prof_msg(section, pdf.file)
+        if section.results.count() > 0:
+            pdf = PDFPlotter(section)
+            pdf.createPDF()
+            # cannot multithread here because it breaks some Jinja2 context that breaks render_template() inside the thread for some reason
+            send_prof_msg(section, pdf.file)
+            pdf.deleteFile()
+        else:
+            # don't create PDF if no results were submitted
+            send_prof_msg(section)
 
 # password reset email
 def send_password_reset_email(user):

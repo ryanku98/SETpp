@@ -4,25 +4,19 @@ from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib
 import matplotlib.pyplot as plt
 import os
-import subprocess
+# import subprocess
 import pandas as pd
 import statistics
 import collections
-
-
 
 # Create the PdfPages object to which we will save the pages:
 # The with statement makes sure that the PdfPages object is closed properly at
 # the end of the block, even if an Exception occurs.
 
-file_path = 'documents/'
-questions_path = 'documents/survey_questions.txt'
-
 class PDFPlotter:
-    def __init__(self, section, course_id):
+    def __init__(self, section):
         self.section = section
-        self.course_id = course_id
-        self.file = file_path+"course_"+str(course_id)+".pdf"
+        self.file = os.path.join('documents', 'course_{}.pdf'.format(self.section.course_id))
 
     def peek_line(self, f):
         pos = f.tell()
@@ -32,11 +26,14 @@ class PDFPlotter:
 
     def createPDF(self):
         """Creates a Multipage PDF"""
-        df = pd.DataFrame.from_records(self.section)
+        data = []
+        for result in self.section.results.all():
+            data.append(list(result.response_data))
+        df = pd.DataFrame.from_records(data)
         with PdfPages(self.file) as pdf:
-            fp_questions = open(questions_path, 'r')
+            fp_questions = open(os.path.join('documents', 'survey_questions.txt'), 'r')
             fr_list = [4,5,11,15,19]
-            self.createCover(self.course_id, pdf) # builds cover page for pdf
+            self.createCover(pdf) # builds cover page for pdf
             figs = plt.figure(figsize=(10,10))
             graph_vals = []
             for i in (range(0, len(df.columns))):
@@ -45,15 +42,13 @@ class PDFPlotter:
                 else:
                     if len(graph_vals) > 0:
                         self.generatePlots(pdf,fp_questions,graph_vals)
-                        plt.subplots_adjust(left=.15,right=0.75,wspace=0.7, hspace=.25*len(graph_vals))
+                        plt.subplots_adjust(left=.15, right=0.75, wspace=0.7, hspace=.25*len(graph_vals))
                         pdf.savefig(figs)
                         plt.close()
 
                         graph_vals = [] #reset histogram arguments
                         figs = plt.figure(figsize=(10,10))
-                    self.generateFreeResponse(pdf,df[i],fp_questions.readline(),i)
-
-                print("DATA "+str(i))
+                    self.generateFreeResponse(pdf, df[i], fp_questions.readline(), i)
 
             fp_questions.close()
             # We can also set the file's metadata via the PdfPages object:
@@ -65,12 +60,14 @@ class PDFPlotter:
             d['CreationDate'] = datetime.datetime(2009, 11, 13)
             d['ModDate'] = datetime.datetime.today()
 
-    def createCover(self, course_id, pdf):
+    def createCover(self, pdf):
         """Method to create the cover page of the result pdf"""
         page = plt.figure(figsize=(10,10))
         page.clf()
-        txt = "Evaluation Results for course "+str(course_id)
-        page.text(0.5, 0.5, txt, transform=page.transFigure, bbox=dict(facecolor='red', alpha=0.5), size=35, ha="center")
+        txt1 = 'SET++ Evaluation Statistics'
+        txt2 = '{}{} - {}'.format(self.section.subject, self.section.course_num, self.section.course_id)
+        page.text(0.5, 0.55, txt1, transform=page.transFigure, bbox=dict(facecolor='red', alpha=0.5), size=35, ha="center")
+        page.text(0.5, 0.45, txt2, transform=page.transFigure, bbox=dict(facecolor='red', alpha=0.5), size=35, ha="center")
         pdf.savefig()
         plt.close()
 
@@ -88,21 +85,25 @@ class PDFPlotter:
                     if l not in counter:
                         counter[l] = 0
                 counter = sorted(counter.items(), key=lambda x:x[0])
-                print(counter)
+
                 scalars = [x[1] for x in counter]
                 labels = [x[0] for x in counter]
-                print(str(scalars)+" "+str(labels))
+
                 plt.bar(x=labels, height=scalars, width=0.3, tick_label=['<2','2','2.5','3','>3'], align='center')
                 plt.xlabel('Time Spent (Hours)')
             else:
                 x = list(pd.to_numeric(graph_vals[i]).values)
                 plt.hist(x, rwidth=0.8, range=(1,5), bins=[0.5,1.5,2.5,3.5,4.5,5.5], density=True)
                 plt.xlabel('Rating')
-                print(x)
-                txt = "mean: "+str(round(statistics.mean(map(float, x) ), 3) ) + "\nmedian: "+str(statistics.median(x)) + "\nN: " + str(len(x))
+
+                # txt = "mean: "+str(round(statistics.mean(map(float, x) ), 3) ) + "\nmedian: "+str(statistics.median(x)) + "\nN: " + str(len(x))
+                txt = 'mean: {}\nmedian: {}\n'.format(round(statistics.mean(map(float, x)), 3), statistics.median(x))
+                if self.section.results.count() > 1:
+                    txt += 'STD: {}\n'.format(round(statistics.stdev(map(float, x)), 3))
+                txt += 'N: {}'.format(len(x))
                 ax.text(6.5, 0.0, txt,
                       bbox=dict(facecolor='red', alpha=0.5),
-                      horizontalalignment='center',
+                      horizontalalignment='left',
                       verticalalignment='center')
 
             plt.ylabel('Frequency')
@@ -120,3 +121,8 @@ class PDFPlotter:
             page.text(0.15, 0.85-i*.05, str(responses[i]), transform=page.transFigure, bbox=dict(facecolor='green', alpha=0.2), size=7, ha="left")
         pdf.savefig()
         plt.close()
+
+    def deleteFile(self):
+        """Delete the file after it has been sent to corresponding professor"""
+        if os.path.exists(self.file):
+            os.remove(self.file)

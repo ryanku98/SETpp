@@ -3,11 +3,12 @@
 {% block content %}
 <h1>SETpp Survey</h1>
 {% if not deadline or not deadline.is_valid(time) %}
-<p>WARNING: The deadline for this survey session has ended!</p>
+  <p>WARNING: The deadline for this survey session has ended!</p>
 {% endif %}
 {% if deadline %}
-<p>Deadline: {{ deadline.get_datetime() }}</p>
+  <p>Deadline: {{ deadline.get_datetime() }}</p>
 {% endif %}
+<p>Current time: {{ time.strftime('%m-%d-%Y %H:%M:%S') + ' UTC' }}</p>
 <form action="" method="post" novalidate>
   {{ form.hidden_tag() }}
   {# SUBMISSION VALIDATION #}

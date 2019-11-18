@@ -3,7 +3,7 @@
 {% block content %}
 <h1>reminders page</h1>
 <p>Date and times are set in UTC</p>
-<p>Current time (UTC): {{ time.strftime('%m-%d-%Y %H:%M:%S') }}</p>
+<p>Current time: {{ time.strftime('%m-%d-%Y %H:%M:%S') + ' UTC' }}</p>
 <form action="" method="post" enctype="multipart/form-data" novalidate>
   {{ form.hidden_tag() }}
   {# NOTE: type="datetime-local" is not recognized by Safari on MAC OSX, but is recognized by Safari on iOS :/ #}
