@@ -3,14 +3,18 @@
 {% block app_content %}
 <h1>SET++ Student Evaluation of Teaching</h1>
 {% if not deadline or not deadline.is_valid(time) %}
-<p>WARNING: The deadline for this survey session has ended!</p>
+  <p>WARNING: The deadline for this survey session has ended!</p>
 {% endif %}
 {% if deadline %}
-<p>Deadline: {{ deadline.get_datetime() }}</p>
+  <p>Deadline: {{ deadline.get_datetime() }}</p>
 {% endif %}
+
 <h3>
     Please answer these questions honestly to improve the lab for later students.
 </h3> <br>
+
+<p>Current time: {{ time.strftime('%m-%d-%Y %H:%M:%S') + ' UTC' }}</p>
+
 <form action="" method="post" novalidate>
   {{ form.hidden_tag() }}
   {# SUBMISSION VALIDATION #}

@@ -186,8 +186,6 @@ class Student(db.Model):
     c_id = db.Column(db.Integer, db.ForeignKey('section.course_id'))
     def __repr__(self):
         return '<Student ID {} - Course {} - Email {}>'.format(self.s_id, self.c_id, self.email)
-    def submitted(self):
-        self.survey_submitted = True
     def get_survey_link(self):
         return url_for('survey', s=self.s_id, c=self.c_id, _external=True)
 
@@ -227,7 +225,7 @@ def addResult(s_id, c_id, response_data):
     if section is not None:
         result = Result(section=section, response_data=response_data)
         if student is not None and not student.survey_submitted:
-            student.submitted()
+            student.survey_submitted = True
             db.session.add(result)
             db.session.commit()
             log_added(result)
@@ -244,12 +242,14 @@ class Deadline(db.Model):
     """Defines the Deadline database model - for this instance, at most 1 Deadline should exist at any given time"""
     id = db.Column(db.Integer, primary_key=True)
     datetime = db.Column(db.DateTime, index=True, default=DT.utcnow())
+    executed = db.Column(db.Boolean, default=False) # True if professors have been emailed statistics triggered by passing the deadline
     def __repr__(self):
         return '<Deadline {} UTC>'.format(self.default_format())
     def default_format(self):
         return self.datetime.strftime('%Y-%m-%dT%H:%M')
     def update_datetime(self, dt):  # assume entered dt is valid
         self.datetime = dt
+        self.executed = False   # reset flag
     def get_datetime(self): # more legible, American format
         return '{} UTC'.format(self.datetime.strftime('%m-%d-%Y %H:%M'))
     def is_valid(self, now=DT.utcnow()):
@@ -264,6 +264,7 @@ def addDeadline(dt, day_offset=0, hour_offset=0):
     else:
         deadline = Deadline(datetime=new_time)
         db.session.add(deadline)
+    flash('Added deadline: {}'.format(deadline.get_datetime()))
     db.session.commit()
     print('ADDED: {}'.format(deadline))
 
@@ -286,10 +287,12 @@ def addReminders(datetime_list, now):
     """Wipe database of Reminder objects and add valid datetimes from inputted tuple/list without repeats"""
     Reminder.query.delete()
     for dt in datetime_list:
-        if is_valid_datetime(dt, now) and Reminder.query.filter_by(datetime=dt).count() == 0:
+        #  reminder is valid              reminder is not a repeat of an existing reminder       reminder is before the existing deadline
+        if is_valid_datetime(dt, now) and Reminder.query.filter_by(datetime=dt).count() == 0 and is_valid_datetime(Deadline.query.first().datetime, dt):
             reminder = Reminder(datetime=dt)
             db.session.add(reminder)
             print('ADDED: {}'.format(reminder))
+            flash('Added reminder: {}'.format(reminder.get_datetime()))
     db.session.commit()
 
 def is_valid_datetime(dt1, dt2):
@@ -313,3 +316,47 @@ def is_valid_datetime(dt1, dt2):
         elif attribute < 0:
             return False
     return validity
+
+# START OF SCHEDULER CODE
+import atexit
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime
+from app.models import Deadline, Reminder, log_header
+from app.emails import send_all_student_emails, send_all_prof_emails
+
+scheduler = BackgroundScheduler()
+@scheduler.scheduled_job('interval', seconds=10, id='deadline-reminder-id')
+def check_dates():
+    """Check existing deadlines and reminders in the database, executes any corresponding action if one has passed"""
+    now = datetime.utcnow()
+    deadline = Deadline.query.first()
+    reminders = Reminder.query.order_by(Reminder.datetime).all()
+    r_sent = False
+    # if deadline exists, check if already passed
+    if deadline is not None and not deadline.is_valid(now) and not deadline.executed:
+        print(log_header('AUTOMATED EMAILS'))
+        # app.app_context() needed because Flask can't retrieve app context for Jinja's render_template() when this is called here
+        with app.app_context():
+            send_all_prof_emails()
+            deadline.executed = True
+            db.session.commit()
+    else:
+        for reminder in reminders:
+            if not reminder.is_valid(now):
+                # if no emails have been sent yet
+                if not r_sent:
+                    print(log_header('AUTOMATED EMAILS'))
+                    # app.app_context() needed because Flask can't retrieve app context for Jinja's render_template() when this is called here
+                    with app.app_context():
+                        send_all_reminder_emails()
+                    r_sent = True
+                # if a reminder has been sent already, other reminders that may have passed within the same interval should not trigger another reminder (and should be also removed)
+                with app.app_context():
+                    db.session.delete(reminder)
+                    db.session.commit()
+
+print('Scheduler starting...')
+scheduler.start()
+# shut down schedule when app exits
+atexit.register(lambda: scheduler.shutdown())
+# END OF SCHEDULER CODE

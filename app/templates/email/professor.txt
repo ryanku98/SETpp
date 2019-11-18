@@ -2,15 +2,25 @@ Hi Professor {{ section.prof_name }},
 
 Here are your TA's teaching evaluations for {{ section.subject + section.course_num }} - Section {{ section.course_id }}:
 
+SUBMISSIONS: {{ section.results.count() }}/{{ section.students.count() }}
+
+{% if section.results.count() == 0 %}
+Unfortunately, statistics could not be calculated due to lack of submissions.
+{% else %}
 AVERAGES
 {% for my_tuple in section.get_means() %}
-{{ my_tuple[0] }}: {{ '{:.3f}'.format(my_tuple[1]) }}
+  {{ my_tuple[0] }}: {{ '{:.3f}'.format(my_tuple[1]) }}
 {% endfor %}
 
 STANDARD DEVIATIONS
-{% for my_tuple in section.get_stds() %}
-{{ my_tuple[0] }}: {{ '{:.3f}'.format(my_tuple[1]) }}
-{% endfor %}
+{# STDs for population of 1 is a divide-by-0 error, so don't report #}
+{% if section.results.count() == 1 %}
+  N/A - only 1 submission
+{% else %}
+  {% for my_tuple in section.get_stds() %}
+  {{ my_tuple[0] }}: {{ '{:.3f}'.format(my_tuple[1]) }}<br>
+  {% endfor %}
+{% endif %}
 
 FREE RESPONSES
 {% for i, question_tuple in enumerate(section.get_frq_responses()) %}
@@ -19,6 +29,7 @@ FREE RESPONSES
   - {{ response }}
   {% endfor %}
 {% endfor %}
+{% endif %}
 
 Sincerely,
 The SET++ Team

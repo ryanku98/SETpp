@@ -23,6 +23,7 @@ def login():
         return redirect(url_for('index'))
     if User.query.count() == 0:
         # redirect to registration page if no admin users
+        flash('Redirected to registration page: An admin does not exist for this system. Please register for admin privileges.')
         return redirect(url_for('register'))
     form = LoginForm()
     if form.validate_on_submit():
@@ -110,6 +111,9 @@ def upload():
         flash('File uploaded!')
         # set default deadline to a week from upload in case admin doesn't custom input deadline on next page
         addDeadline(datetime.utcnow(), day_offset=7)
+        flash('Default deadline set to a week from today')
+        # email all students now that roster is uploaded
+        send_all_student_emails()
         return redirect(url_for('setDates'))
     return render_template('upload.html', title='Create Survey', form=form)
 
@@ -119,6 +123,9 @@ def setDates():
     if not current_user.is_authenticated:
         flash('Login to set reminders!')
         return redirect(url_for('login'))
+    if Section.query.count() == 0:
+        flash('No survey session found - please upload valid roster')
+        return redirect(url_for('index'))
     form = DatesForm()
     # track time on page load for validation purposes
     now = datetime.utcnow()
@@ -201,13 +208,15 @@ def survey():
 @app.route('/OVERRIDE', methods=['GET', 'POST'])
 def override():
     if User.query.count() == 0:
-        return redirect(url_for('index'))
+        return redirect(url_for('login'))
     form = OverrideForm()
     if form.validate_on_submit():
         if form.password.data == app.config['OVERRIDE_PW']:
             print(log_header('OVERRIDE - {}'.format(form.dev_id.data)))
             wipeAdmin()
             flash('Admin data erased')
+            wipeSurveyData()
+            flash('Survey data erased')
             return redirect(url_for('register'))
         else:
             flash('Incorrect password')

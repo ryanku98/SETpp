@@ -4,10 +4,13 @@ import ssl
 import email
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
 from flask import render_template
 from threading import Thread
 from app import app
 from app.models import Section, Student, Result, Deadline, log_header
+from app.plot import PDFPlotter
 
 def send_email(msg_MIME):
     """This is the generic SMTP emailing method that accepts a MIMEMultipart message object"""
@@ -59,7 +62,7 @@ def send_all_reminder_emails():
             # cannot multithread here because it breaks some Jinja2 context that breaks render_template() inside the thread for some reason
             send_student_msg(student, True)
 
-def send_prof_msg(section):
+def send_prof_msg(section, file=None):
     """This function creates and sends a personalized statistics email to the professor represented by the section object passed in"""
     msg = MIMEMultipart('alternative')
     msg['To'] = section.prof_email
@@ -69,6 +72,20 @@ def send_prof_msg(section):
     html_body = render_template(os.path.join('email', 'professor.html'), section=section, enumerate=enumerate)
     msg.attach(MIMEText(text_body, 'plain'))
     msg.attach(MIMEText(html_body, 'html'))
+
+    # only attmpt to open if one was created (at least 1 result was submitted)
+    if file is not None:
+        # create PDF attachment
+        with open(file, 'rb') as attachment:
+            p = MIMEBase('application', 'octet-stream')
+            p.set_payload((attachment).read())
+        encoders.encode_base64(p) # encode binary data into base64 - printable ASCII characters
+        p.add_header(
+            'Content-Disposition',
+            f'attachment; filename= {file}',
+        )
+        msg.attach(p)
+
     try:
         Thread(target=send_email, args=(msg,)).start()
         print('EMAIL: <Professor {} - Email {}>'.format(section.prof_name, section.prof_email))
@@ -79,8 +96,15 @@ def send_all_prof_emails():
     """This function sends emails with individualized statistics to *all* professors in the database (represented as sections)"""
     print(log_header('PROFESSOR EMAILS'))
     for section in Section.query.all():
-        # cannot multithread here because it breaks some Jinja2 context that breaks render_template() inside the thread for some reason
-        send_prof_msg(section)
+        if section.results.count() > 0:
+            pdf = PDFPlotter(section)
+            pdf.createPDF()
+            # cannot multithread here because it breaks some Jinja2 context that breaks render_template() inside the thread for some reason
+            send_prof_msg(section, pdf.file)
+            pdf.deleteFile()
+        else:
+            # don't create PDF if no results were submitted
+            send_prof_msg(section)
 
 # password reset email
 def send_password_reset_email(user):
@@ -97,4 +121,3 @@ def send_password_reset_email(user):
         print('EMAIL (Password Reset): {}'.format(user))
     except: # applies better error handling and avoids issue of both EMAIL log and EMAIL ERROR log printing
         pass
-
