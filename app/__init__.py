@@ -8,6 +8,7 @@ import os
 static_folder = os.path.abspath('static')
 application = Flask(__name__, static_folder = static_folder)
 app = application
+bootstrap = Bootstrap(app)
 app.config.from_object(Config)
 db = SQLAlchemy(app)  #db object that represents the database
 migrate = Migrate(app, db)

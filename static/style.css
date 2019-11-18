@@ -2,6 +2,44 @@ body {
     background-color: linen;
 }
 
+#app {
+    margin-left: 30px;
+}
+
 h1 {
   color: darkred;
+}
+
+#bottom {
+    position: fixed;
+    bottom: 1%;
+    left: 2%;
+}
+
+nav#bar {
+    margin-left: 0px !important
+    background-color: linen;
+    color: darkred;
+}
+
+nav.navbar.navbar-default {
+    background-color: linen;
+    border-color: darkred;
+}
+
+navbar-nav a {
+    color: red;
+}
+
+.container {
+    width: 100%;
+    margin-left: 0px !important;
+}
+
+#seal {
+    width: 8%;
+    display: block;
+    position: fixed;
+    right: 3%;
+    top: 8%;
 }

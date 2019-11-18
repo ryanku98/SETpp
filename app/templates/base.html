@@ -1,37 +1,79 @@
 <!-- <!DOCTYPE html> -->
+
+{% extends 'bootstrap/base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+
+{% block content %}
 <html lang="en" dir="ltr">
+
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+
+  <nav class="navbar navbar-default">
+      <div class="container">
+          <div class="navbar-header">
+              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false" >
+                  <span class="sr-only">Toggle navigation</span>
+                  <span class="icon-bar"></span>
+                  <span class="icon-bar"></span>
+                  <span class="icon-bar"></span>
+              </button>
+              <a class="navbar-brand" href="{{ url_for('index') }}">SET++</a>
+          </div>
+          <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+              <ul class="nav navbar-nav">
+                  {% if current_user.is_authenticated %}
+                  <li> <a href="{{ url_for('upload') }}">Upload Roster</a> </li>
+                  <li> <a href="{{ url_for('emailallstudents') }}">Send Surveys</a> </li>
+                  <li> <a href="{{ url_for('emailallprofessors') }}">Send Results</a> </li>
+                  <li> <a href="{{ url_for('setDates') }}">Deadline & Reminders</a> </li>
+                  {% endif %}
+              </ul>
+
+              <ul class="nav navbar-nav navbar-right">
+                  {% if current_user.is_authenticated %}
+                  <li> <a href="{{ url_for('changePassword') }}">Change Password</a> </li>
+                  <li> <a href="{{ url_for('logout') }}">Admin Logout</a> </li>
+                  {% endif %}
+              </ul>
+          </div>
+      </div>
+  </nav>
+
   <head>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
     <meta charset="utf-8">
     {% if title %}
-    <title>{{ title }} - SETpp</title>
+    <title>{{ title }} - SET++</title>
     {% else %}
-    <title>Welcome to SETpp!</title>
+    <title>Welcome to SET++</title>
     {% endif %}
   </head>
+
   <body>
-    <nav>
-      SETpp:
-      {% if current_user.is_authenticated %}
-        <a href="{{ url_for('index') }}">Admin Home</a>
-        <a href="{{ url_for('logout') }}">Admin Logout</a>
-        <a href="{{ url_for('changePassword') }}">Change Password</a>
-      {% else %}
-        <a href="{{ url_for('login') }}">Admin Login</a>
-      {% endif %}
-      <a href="{{ url_for('survey') }}">Lab Evaluation</a>
-      <a href="{{ url_for('override') }}">Developer Override</a>
-    </nav>
-    <hr>
     {% with messages = get_flashed_messages() %}
     {% if messages %}
-    <ul>
+    <ul style="list-style-type:none;">
       {% for message in messages %}
       <li>{{ message }}</li>
       {% endfor %}
     </ul>
     {% endif %}
     {% endwith %}
-    {% block content %}{% endblock %}
+    <div style="margin-left: 40px;">
+        <img src="{{ url_for('static', filename='scu.png') }}" id="seal">
+        <app id="app">
+            {% block app_content %}{% endblock %}
+        </app>
+    </div>
   </body>
+
+
+<div>
+    <p id="bottom">
+        <a href="mailto:setsystempp@gmail.com">Contact us</a>
+    </p>
+</div>
+
+
 </html>
+{% endblock %}

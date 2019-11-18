@@ -1,10 +1,19 @@
+
 {% extends "base.html" %}
 
-{% block content %}
-<h1>home page here</h1>
-<a href="{{ url_for('upload') }}">Upload roster</a>
-<a href="{{ url_for('emailallstudents') }}">Email all students (dev)</a>
-<a href="{{ url_for('emailallprofessors') }}">Send professor emails (dev)</a>
-<a href="{{ url_for('setDates') }}">Deadline & Reminders</a>
-<p>Clicking "start survey session" sends out emails to students on the roster</p>
+{% block app_content %}
+<h1>
+    Welcome to SET++
+</h1>
+
+<h2>Instructions:</h2>
+<h3>
+    <ol type = "1">
+        <li>View the <a href="{{ url_for('survey') }}">SET survey</a> that will be sent out to students</li>
+        <li>Upload a roster</li>
+        <li>Start a survey session by sending the surveys out to students
+        <li>Deadline & Reminders: set a deadline for the survey and time reminder emails</li>
+    </ol>
+</h3>
+
 {% endblock %}
