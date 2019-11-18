@@ -1,8 +1,8 @@
 import os
 import jwt
 import pandas
-from app import app, db, login
-from flask import flash, url_for
+from app import db, login
+from flask import flash, url_for, current_app
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from time import time
@@ -42,10 +42,10 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
     def get_reset_password_token(self, expires_in=600): # Encodes {info} and returns a token
-        return jwt.encode({'reset_password': self.id, 'exp': time() + expires_in}, app.config['SECRET_KEY'], algorithm='HS256').decode('utf-8')
+        return jwt.encode({'reset_password': self.id, 'exp': time() + expires_in}, current_app.config['SECRET_KEY'], algorithm='HS256').decode('utf-8')
     def verify_reset_password_token(token): # Decodes token using SECRET_KEY defined in app config class
         try:
-            id = jwt.decode(token, app.config['SECRET_KEY'], algorithm=['HS256'])['reset_password']
+            id = jwt.decode(token, current_app.config['SECRET_KEY'], algorithm=['HS256'])['reset_password']
         except:
             return
         return User.query.get(id)
@@ -187,7 +187,7 @@ class Student(db.Model):
     def __repr__(self):
         return '<Student ID {} - Course {} - Email {}>'.format(self.s_id, self.c_id, self.email)
     def get_survey_link(self):
-        return url_for('survey', s=self.s_id, c=self.c_id, _external=True)
+        return url_for('main.survey', s=self.s_id, c=self.c_id, _external=True)
 
 def addStudent(s_id, c_id, email):
     """Function to add student, ensures no repeats (same student ID and course ID)"""
@@ -316,47 +316,3 @@ def is_valid_datetime(dt1, dt2):
         elif attribute < 0:
             return False
     return validity
-
-# START OF SCHEDULER CODE
-import atexit
-from apscheduler.schedulers.background import BackgroundScheduler
-from datetime import datetime
-from app.models import Deadline, Reminder, log_header
-from app.emails import send_all_student_emails, send_all_prof_emails
-
-scheduler = BackgroundScheduler()
-@scheduler.scheduled_job('interval', seconds=10, id='deadline-reminder-id')
-def check_dates():
-    """Check existing deadlines and reminders in the database, executes any corresponding action if one has passed"""
-    now = datetime.utcnow()
-    deadline = Deadline.query.first()
-    reminders = Reminder.query.order_by(Reminder.datetime).all()
-    r_sent = False
-    # if deadline exists, check if already passed
-    if deadline is not None and not deadline.is_valid(now) and not deadline.executed:
-        print(log_header('AUTOMATED EMAILS'))
-        # app.app_context() needed because Flask can't retrieve app context for Jinja's render_template() when this is called here
-        with app.app_context():
-            send_all_prof_emails()
-            deadline.executed = True
-            db.session.commit()
-    else:
-        for reminder in reminders:
-            if not reminder.is_valid(now):
-                # if no emails have been sent yet
-                if not r_sent:
-                    print(log_header('AUTOMATED EMAILS'))
-                    # app.app_context() needed because Flask can't retrieve app context for Jinja's render_template() when this is called here
-                    with app.app_context():
-                        send_all_reminder_emails()
-                    r_sent = True
-                # if a reminder has been sent already, other reminders that may have passed within the same interval should not trigger another reminder (and should be also removed)
-                with app.app_context():
-                    db.session.delete(reminder)
-                    db.session.commit()
-
-print('Scheduler starting...')
-scheduler.start()
-# shut down schedule when app exits
-atexit.register(lambda: scheduler.shutdown())
-# END OF SCHEDULER CODE

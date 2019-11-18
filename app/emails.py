@@ -6,22 +6,23 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
-from flask import render_template
+from flask import render_template, current_app
 from threading import Thread
-from app import app
+# from app import app
 from app.models import Section, Student, Result, Deadline, log_header
 from app.plot import PDFPlotter
 
-def send_email(msg_MIME):
+def send_email(app, msg_MIME):
     """This is the generic SMTP emailing method that accepts a MIMEMultipart message object"""
-    msg_MIME['From'] = app.config['MAIL_ADDRESS']
-    with smtplib.SMTP(app.config['MAIL_SERVER'], app.config['MAIL_PORT']) as server:
-        server.starttls(context=ssl.create_default_context())  # Start encrypting traffic
-        server.login(app.config['MAIL_ADDRESS'], app.config['MAIL_PASSWORD'])
-        try:
-            server.sendmail(app.config['MAIL_ADDRESS'], msg_MIME['To'], msg_MIME.as_string())
-        except:
-            print('ERROR: Email to {} failed'.format(msg_MIME['To']))
+    with app.app_context():
+        msg_MIME['From'] = current_app.config['MAIL_ADDRESS']
+        with smtplib.SMTP(current_app.config['MAIL_SERVER'], current_app.config['MAIL_PORT']) as server:
+            server.starttls(context=ssl.create_default_context())  # Start encrypting traffic
+            server.login(current_app.config['MAIL_ADDRESS'], current_app.config['MAIL_PASSWORD'])
+            try:
+                server.sendmail(current_app.config['MAIL_ADDRESS'], msg_MIME['To'], msg_MIME.as_string())
+            except:
+                print('ERROR: Email to {} failed'.format(msg_MIME['To']))
 
 def send_student_msg(student, reminder=False):
     """This function creates and sends a personalized email to the student represented by the student object passed in"""
@@ -87,7 +88,8 @@ def send_prof_msg(section, file=None):
         msg.attach(p)
 
     try:
-        Thread(target=send_email, args=(msg,)).start()
+        # with app.app_context():
+        Thread(target=send_email, args=(current_app._get_current_object(), msg)).start()
         print('EMAIL: <Professor {} - Email {}>'.format(section.prof_name, section.prof_email))
     except: # applies better error handling and avoids issue of both EMAIL log and EMAIL ERROR log printing
         pass
