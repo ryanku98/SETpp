@@ -5,7 +5,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 import os
 import subprocess
-from app.survey import Section, fr_ids
 import pandas as pd
 import statistics
 import collections
@@ -16,34 +15,33 @@ import collections
 # The with statement makes sure that the PdfPages object is closed properly at
 # the end of the block, even if an Exception occurs.
 
-# class Plotter:
-#     def __init__(self, section):
-#         self.section = section
 file_path = 'documents/'
 questions_path = 'documents/survey_questions.txt'
 
 class PDFPlotter:
-    def __init__(self, section, file):
+    def __init__(self, section, course_id):
         self.section = section
-        self.file = file_path+file
+        self.course_id = course_id
+        self.file = file_path+"course_"+str(course_id)+".pdf"
 
+    def peek_line(self, f):
+        pos = f.tell()
+        line = f.readline()
+        f.seek(pos)
+        return line
 
     def createPDF(self):
         """Creates a Multipage PDF"""
-        print(self.file)
-        df = pd.DataFrame.from_records(self.section.data)
-        print(self.section.fr_list)
-        # os.remove(self.file)
+        df = pd.DataFrame.from_records(self.section)
         with PdfPages(self.file) as pdf:
             fp_questions = open(questions_path, 'r')
-            self.createCover(self.section.course_id, pdf) # builds cover page for pdf
+            fr_list = [4,5,11,15,19]
+            self.createCover(self.course_id, pdf) # builds cover page for pdf
             figs = plt.figure(figsize=(10,10))
             graph_vals = []
-            for i in (range(2, len(self.section.data[0]))):
-
-                if i not in fr_ids:
+            for i in (range(0, len(df.columns))):
+                if i not in fr_list:
                     graph_vals.append( df[i] )
-                    # self.generateStatistics(pdf,x)
                 else:
                     if len(graph_vals) > 0:
                         self.generatePlots(pdf,fp_questions,graph_vals)
@@ -53,8 +51,7 @@ class PDFPlotter:
 
                         graph_vals = [] #reset histogram arguments
                         figs = plt.figure(figsize=(10,10))
-
-                    self.generateFreeResponse(pdf,fp_questions.readline(),fr_ids.index(i))
+                    self.generateFreeResponse(pdf,df[i],fp_questions.readline(),i)
 
                 print("DATA "+str(i))
 
@@ -72,7 +69,7 @@ class PDFPlotter:
         """Method to create the cover page of the result pdf"""
         page = plt.figure(figsize=(10,10))
         page.clf()
-        txt = "Evaluation Results for course "+course_id
+        txt = "Evaluation Results for course "+str(course_id)
         page.text(0.5, 0.5, txt, transform=page.transFigure, bbox=dict(facecolor='red', alpha=0.5), size=35, ha="center")
         pdf.savefig()
         plt.close()
@@ -86,14 +83,16 @@ class PDFPlotter:
             if "hours" in question:
                 x = graph_vals[i].values
                 counter = collections.Counter(x)
-                label = ["<2","2","2.5","3",">3"]
+                label = [1.5,2.0,2.5,3.0,3.5]
                 for l in label:
                     if l not in counter:
                         counter[l] = 0
-                scalars = list(counter.values())
-                labels = list(counter.keys())
+                counter = sorted(counter.items(), key=lambda x:x[0])
+                print(counter)
+                scalars = [x[1] for x in counter]
+                labels = [x[0] for x in counter]
                 print(str(scalars)+" "+str(labels))
-                plt.bar(x=labels, height=scalars, width=0.8, tick_label=labels)
+                plt.bar(x=labels, height=scalars, width=0.3, tick_label=['<2','2','2.5','3','>3'], align='center')
                 plt.xlabel('Time Spent (Hours)')
             else:
                 x = pd.to_numeric(graph_vals[i]).values
@@ -109,9 +108,8 @@ class PDFPlotter:
             # ax.yaxis.set_major_formatter(PercentFormatter(xmax=1))
             plt.title("Question: "+question, size=10)
 
-    def generateFreeResponse(self, pdf, question, index):
+    def generateFreeResponse(self, pdf, responses, question, index):
         """Method to generate free response answers on the PDF"""
-        responses = self.section.fr_list[index]
         numResponses = len(responses)
         page = plt.figure(figsize=(10,10))
         page.clf()
