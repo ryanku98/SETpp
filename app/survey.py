@@ -1,6 +1,7 @@
 import os
 import csv
 import xlrd
+from flask import current_app
 from app import db
 from app.models import log_header, addSection, addStudent
 from werkzeug.utils import secure_filename
@@ -62,5 +63,5 @@ def parse_roster(form_roster_data):
             # make one student per row
             s_id = removeZeroes(row[s_id_i_roster])
             stud_email = row[stud_email_i_roster]
-            Thread(target=addStudent, args=(s_id, c_id, stud_email)).start()
+            Thread(target=addStudent, args=(current_app._get_current_object(), s_id, c_id, stud_email)).start()
     os.remove(csv_filepath)
