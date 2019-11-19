@@ -55,6 +55,7 @@ def parse_roster(form_roster_data):
         rows = csv.reader(f_roster, delimiter=',')
         prev_c_id = -1
         print(log_header('ROSTER UPLOADED - PARSING'))
+        student_threads = list()
         for row in rows:
             # add sections, addSection() avoids repeats
             subject = row[subject_i_roster]
@@ -69,5 +70,10 @@ def parse_roster(form_roster_data):
             # make one student per row
             s_id = removeZeroes(row[s_id_i_roster])
             stud_email = row[stud_email_i_roster]
-            Thread(target=addStudent, args=(current_app._get_current_object(), s_id, c_id, stud_email)).start()
+            t = Thread(target=addStudent, args=(current_app._get_current_object(), s_id, c_id, stud_email))
+            student_threads.append(t)
+            t.start()
+        # make sure all adding threads finish before exiting (because emailing is called next and it might be called before all addStudent threads finish)
+        for t in student_threads:
+            t.join()
     os.remove(csv_filepath)
