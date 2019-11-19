@@ -27,6 +27,8 @@
                   <li> <a href="{{ url_for('main.emailallstudents') }}">Send Surveys</a> </li>
                   <li> <a href="{{ url_for('main.emailallprofessors') }}">Send Results</a> </li>
                   <li> <a href="{{ url_for('main.setDates') }}">Deadline & Reminders</a> </li>
+                  {% else %}
+                  <li> <a href="{{ url_for('main.survey') }}">View Survey</a> </li>
                   {% endif %}
               </ul>
 
