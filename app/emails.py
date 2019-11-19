@@ -8,7 +8,6 @@ from email.mime.base import MIMEBase
 from email import encoders
 from flask import render_template, current_app
 from threading import Thread
-# from app import app
 from app.models import Section, Student, Result, Deadline, log_header
 from app.plot import PDFPlotter
 

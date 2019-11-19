@@ -189,20 +189,21 @@ class Student(db.Model):
     def get_survey_link(self):
         return url_for('main.survey', s=self.s_id, c=self.c_id, _external=True)
 
-def addStudent(s_id, c_id, email):
+def addStudent(app, s_id, c_id, email):
     """Function to add student, ensures no repeats (same student ID and course ID)"""
-    section = Section.query.filter_by(course_id=c_id).first()
-    student = Student.query.filter_by(s_id=s_id, c_id=c_id).first()
-    if section is not None and student is None:
-        student = Student(section=section, s_id=s_id, email=email)
-        db.session.add(student)
-        db.session.commit()
-        log_added(student)
-    # the following cases (theoretically) should not happen if the roster is logically correct
-    elif student is not None:
-        print('ERROR: {} cannot be added - already exists'.format(student))
-    elif section is None:
-        print('ERROR: <Student ID {} - Course {}> cannot be added - section {} does not exist'.format(s_id, c_id, c_id))
+    with app.app_context():
+        section = Section.query.filter_by(course_id=c_id).first()
+        student = Student.query.filter_by(s_id=s_id, c_id=c_id).first()
+        if section is not None and student is None:
+            student = Student(section=section, s_id=s_id, email=email)
+            db.session.add(student)
+            db.session.commit()
+            log_added(student)
+        # the following cases (theoretically) should not happen if the roster is logically correct
+        elif student is not None:
+            print('ERROR: {} cannot be added - already exists'.format(student))
+        elif section is None:
+            print('ERROR: <Student ID {} - Course {}> cannot be added - section {} does not exist'.format(s_id, c_id, c_id))
 
 def studentExists(s_id, c_id):
     """Checks if student of matching student ID and course ID exists in the database"""
