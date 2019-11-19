@@ -13,8 +13,7 @@ class APConfig(object):
         'id': 'deadline-reminder-id',
         'func': check_dates,
         'trigger': 'interval',
-        # 'seconds': 2
-        'seconds': 10,
+        'seconds': 60,
         'args': (current_app._get_current_object(),)
     }]
     SCHEDULER_API_ENABLED = True

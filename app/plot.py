@@ -4,10 +4,10 @@ from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib
 import matplotlib.pyplot as plt
 import os
-# import subprocess
 import pandas as pd
 import statistics
 import collections
+import random
 
 # Create the PdfPages object to which we will save the pages:
 # The with statement makes sure that the PdfPages object is closed properly at
@@ -16,7 +16,8 @@ import collections
 class PDFPlotter:
     def __init__(self, section):
         self.section = section
-        self.file = os.path.join('documents', 'course_{}.pdf'.format(self.section.course_id))
+        # random int to avoid collisions when mutliple threads try to generate reports for the same section
+        self.file = os.path.join('documents', 'course_{}_{}.pdf'.format(self.section.course_id, random.rantint(1, 999999999)))
 
     def peek_line(self, f):
         pos = f.tell()
@@ -53,12 +54,12 @@ class PDFPlotter:
             fp_questions.close()
             # We can also set the file's metadata via the PdfPages object:
             d = pdf.infodict()
-            d['Title'] = 'Multipage PDF Example'
-            d['Author'] = 'Jouni K. Sepp\xe4nen'
-            d['Subject'] = 'How to create a multipage pdf file and set its metadata'
-            d['Keywords'] = 'PdfPages multipage keywords author title subject'
-            d['CreationDate'] = datetime.datetime(2009, 11, 13)
-            d['ModDate'] = datetime.datetime.today()
+            d['Title'] = '{}{} - {} Statistics'.format(self.section.subject, self.section.course_num, self.section.course_id)
+            d['Author'] = 'SET++'
+            d['Subject'] = d['Title']
+            d['Keywords'] = '{}{} {}'.format(self.section.subject, self.section.course_num, self.section.course_id)
+            d['CreationDate'] = datetime.datetime.today()
+            d['ModDate'] = d['CreationDate']
 
     def createCover(self, pdf):
         """Method to create the cover page of the result pdf"""
