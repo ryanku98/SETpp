@@ -116,7 +116,7 @@ def upload():
         flash('Default deadline set to a week from today')
         # email all students now that roster is uploaded
         # TODO: want to multithread here to avoid waiting for emails to load page, but request context can't be pushed. Fix?
-        send_all_student_emails()
+        # send_all_student_emails()
         return redirect(url_for('main.setDates'))
     return render_template('upload.html', title='Create Survey', form=form)
 
