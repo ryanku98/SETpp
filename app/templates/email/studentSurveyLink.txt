@@ -1,5 +1,0 @@
-Hello {},
-Please fill your lab evaluations for course #{} out at the following link: {}
-
-Thank you,
-SET++

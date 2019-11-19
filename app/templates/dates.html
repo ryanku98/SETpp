@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 
-{% block content %}
-<h1>reminders page</h1>
+{% block app_content %}
+<h1>Set Deadline and Reminders</h1>
 <p>Date and times are set in UTC</p>
-<p>Current time (UTC): {{ time.strftime('%m-%d-%Y %H:%M:%S') }}</p>
+<p>Current time: {{ time.strftime('%m-%d-%Y %H:%M:%S') + ' UTC' }}</p>
 <form action="" method="post" enctype="multipart/form-data" novalidate>
   {{ form.hidden_tag() }}
   {# NOTE: type="datetime-local" is not recognized by Safari on MAC OSX, but is recognized by Safari on iOS :/ #}
   <p>
-    {{ form.deadline.label }}<br>
+    {{ form.deadline.label }} (By default, this is set to one week after upload.)<br>
     {{ form.deadline(value=defaults[0]) }}<br>
     {% for error in form.deadline.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
   </p>
@@ -27,7 +27,7 @@
     {{ form.reminder3(value=defaults[3]) }}<br>
     {% for error in form.reminder3.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
   </p>
-  <p>Reminders set before the current time will be ignored.</p>
+  <p>Any reminders set before the current time or after the deadline will be ignored.</p>
   <p>
     {{ form.submit() }}
   </p>

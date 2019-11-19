@@ -1,0 +1,12 @@
+Hello,
+
+Please submit your evaluations for lab section {{ student.c_id }} at the following link:
+
+{{ student.get_survey_link() }}
+
+{% if deadline %}
+The deadline for this survey is {{ deadline.get_datetime() }}.
+{% endif %}
+
+Sincerely,
+The SET++ Team
