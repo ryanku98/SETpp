@@ -20,8 +20,8 @@ def send_email(app, msg_MIME):
             server.login(current_app.config['MAIL_ADDRESS'], current_app.config['MAIL_PASSWORD'])
             try:
                 server.sendmail(current_app.config['MAIL_ADDRESS'], msg_MIME['To'], msg_MIME.as_string())
-            except:
-                print('ERROR: Email to {} failed'.format(msg_MIME['To']))
+            except Exception as e:
+                print('ERROR: Email to {} failed - {}'.format(msg_MIME['To'], e))
 
 def send_student_msg(student, reminder=False):
     """This function creates and sends a personalized email to the student represented by the student object passed in"""
