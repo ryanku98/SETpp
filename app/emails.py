@@ -12,44 +12,20 @@ from app.plot import PDFPlotter
 import queue
 from threading import Thread
 
-# def send_email(app, msg_MIME):
-#     """This is the generic SMTP emailing method that accepts a MIMEMultipart message object"""
-#     with app.app_context():
-#         msg_MIME['From'] = current_app.config['MAIL_ADDRESS']
-#         with smtplib.SMTP(current_app.config['MAIL_SERVER'], current_app.config['MAIL_PORT']) as server:
-#             server.starttls(context=ssl.create_default_context())  # Start encrypting traffic
-#             server.login(current_app.config['MAIL_ADDRESS'], current_app.config['MAIL_PASSWORD'])
-#             try:
-#                 server.sendmail(current_app.config['MAIL_ADDRESS'], msg_MIME['To'], msg_MIME.as_string())
-#             except Exception as e:
-#                 print('ERROR: Email to {} failed - {}'.format(msg_MIME['To'], e))
+# TODO: update professors emailing logic, this should be removed after done
+def send_email(app, msg_MIME):
+    """This is the generic SMTP emailing method that accepts a MIMEMultipart message object"""
+    with app.app_context():
+        msg_MIME['From'] = current_app.config['MAIL_ADDRESS']
+        with smtplib.SMTP(current_app.config['MAIL_SERVER'], current_app.config['MAIL_PORT']) as server:
+            server.starttls(context=ssl.create_default_context())  # Start encrypting traffic
+            server.login(current_app.config['MAIL_ADDRESS'], current_app.config['MAIL_PASSWORD'])
+            try:
+                server.sendmail(current_app.config['MAIL_ADDRESS'], msg_MIME['To'], msg_MIME.as_string())
+            except Exception as e:
+                print('ERROR: Email to {} failed - {}'.format(msg_MIME['To'], e))
 
-# def send_student_msg(student, reminder=False):
-#     """This function creates and sends a personalized email to the student represented by the student object passed in"""
-#     msg = MIMEMultipart('alternative')
-#     msg['To'] = student.email
-#     msg['Subject'] = 'Fill Out Your SET++ Lab Evaluations for {}{} - Section {}'.format(student.section.subject, student.section.course_num, student.section.course_id)
-#     if reminder:
-#         # add REMINDER to subject line if is reminder
-#         msg['Subject'] = 'REMINDER: ' + msg['Subject']
-#     deadline = Deadline.query.first()
-#     if deadline is not None and deadline.is_valid():
-#         text_body = render_template(os.path.join('email', 'student.txt'), student=student, deadline=deadline)
-#         html_body = render_template(os.path.join('email', 'student.html'), student=student, deadline=deadline)
-#         msg.attach(MIMEText(text_body, 'plain'))
-#         msg.attach(MIMEText(html_body, 'html'))
-#         try:
-#             Thread(target=send_email, args=(current_app._get_current_object(), msg)).start()
-#             print('EMAIL: {}'.format(student))
-#         except: # applies better error handling and avoids issue of both EMAIL log and EMAIL ERROR log printing
-#             pass
-#     elif deadline is None:
-#         print('ERROR: Student emails cannot be sent without a deadline')
-#     elif not deadline.is_valid():
-#         print('ERROR: Student emails cannot be sent without a valid deadline')
-
-# cannot pass in a student object because this is a new thread and SQLite errors out when querying it (i.e.student.section)
-# def create_student_msg(sender, student, deadline, reminder=False):
+# must pass in student_section_subject and student_section_course_num because they can't be queried (i.e. student.section.subject) outside original app context?
 def create_student_msg(app, sender, student, student_section_subject, student_section_course_num, link, deadline, reminder=False):
     msg = MIMEMultipart('alternative')
     msg['From'] = sender
@@ -61,7 +37,7 @@ def create_student_msg(app, sender, student, student_section_subject, student_se
     if deadline is not None and deadline.is_valid():
         with app.app_context():
             text_body = render_template(os.path.join('email', 'student.txt'), student=student, link=link, deadline=deadline)
-            html_body = render_template(os.path.join('email', 'student.html'), student=student, deadline=deadline)
+            html_body = render_template(os.path.join('email', 'student.html'), student=student, link=link, deadline=deadline)
         msg.attach(MIMEText(text_body, 'plain'))
         msg.attach(MIMEText(html_body, 'html'))
     return (student.email, msg.as_string())
@@ -142,9 +118,10 @@ def send_prof_msg(section, file=None):
             p = MIMEBase('application', 'octet-stream')
             p.set_payload((attachment).read())
         encoders.encode_base64(p) # encode binary data into base64 - printable ASCII characters
+        fname = '{}{}_{}.pdf'.format(section.subject, section.course_num, section.course_id)
         p.add_header(
             'Content-Disposition',
-            f'attachment; filename= {file}',
+            f'attachment; filename={fname}',
         )
         msg.attach(p)
 
