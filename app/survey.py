@@ -9,7 +9,13 @@ from threading import Thread
 
 def removeZeroes(str):
     """Strip extra characters in SCU's roster template cells"""
-    return str.lstrip('0').rstrip('.0')
+    try:
+        # strips leading zeroes and trailing decimals (i.e. .0)
+        # float casting needed first in case str is a string-type decimal (i.e. '1.0') - casting directly to int would fail
+        return int(float(str))
+    except:
+        # needed for headers, etc. when passed-in value is not a string-type number
+        return str
 
 def parse_roster(form_roster_data):
     """Use uploaded roster to create corresponding database objects - expects a wtforms.fields.FileField object (i.e. form.<uploaded_file>.data)"""
