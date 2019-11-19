@@ -80,7 +80,7 @@ class SurveyForm(FlaskForm):
     learning_3 = RadioField('The labs taught me to think creatively. (An answer of 3 is neutral)', choices=scale_choices, validators=[DataRequired()])
     learning_4 = RadioField('I would be able to repeat the labs without help. (An answer of 3 is neutral)', choices=scale_choices, validators=[DataRequired()])
     learning_5 = TextAreaField('What was your favorite aspect of the lab?', render_kw=text_area_size, validators=[DataRequired(), Length(min=1, max=max_length, message='{} character limit.'.format(max_length))])
-    learning_6 = TextAreaField('What was your favorite aspect of the lab?', render_kw=text_area_size, validators=[DataRequired(), Length(min=1, max=max_length, message='{} character limit.'.format(max_length))])
+    learning_6 = TextAreaField('What about the lab would you like to see improved?', render_kw=text_area_size, validators=[DataRequired(), Length(min=1, max=max_length, message='{} character limit.'.format(max_length))])
     lab_1 = RadioField('The lab instructor was supportive. (An answer of 3 is neutral)', choices=scale_choices, validators=[DataRequired()])
     lab_2 = RadioField('The lab instructor was approachable. (An answer of 3 is neutral)', choices=scale_choices, validators=[DataRequired()])
     lab_3 = RadioField('The lab instructor was able to answer my questions. (An answer of 3 is neutral)', choices=scale_choices, validators=[DataRequired()])
