@@ -92,6 +92,13 @@ class PDFPlotter:
 
                 plt.bar(x=labels, height=scalars, width=0.3, tick_label=['<2','2','2.5','3','>3'], align='center')
                 plt.xlabel('Time Spent (Hours)')
+
+                txt = 'mean: {}\nmedian: {}\nN: {}'.format(round(statistics.mean(map(float, x)), 3), statistics.median(x), len(x))
+                y_max = ax.get_ylim()[1]
+                plt.text(4.25, y_max/2, txt,
+                      bbox=dict(facecolor='red', alpha=0.5),
+                      horizontalalignment='center',
+                      verticalalignment='center')
             else:
                 x = list(pd.to_numeric(graph_vals[i]).values)
                 plt.hist(x, rwidth=0.8, range=(1,5), bins=[0.5,1.5,2.5,3.5,4.5,5.5], density=True)
@@ -102,9 +109,10 @@ class PDFPlotter:
                 if self.section.results.count() > 1:
                     txt += 'STD: {}\n'.format(round(statistics.stdev(map(float, x)), 3))
                 txt += 'N: {}'.format(len(x))
-                ax.text(6.5, 0.0, txt,
+                y_max = ax.get_ylim()[1]
+                ax.text(6.5, y_max/2, txt,
                       bbox=dict(facecolor='red', alpha=0.5),
-                      horizontalalignment='left',
+                      horizontalalignment='center',
                       verticalalignment='center')
 
             plt.ylabel('Frequency')
