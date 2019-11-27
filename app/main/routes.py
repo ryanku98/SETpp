@@ -7,7 +7,7 @@ from app.main import bp
 from app.models import User, Student, Section, Result, Deadline, Reminder, log_header, wipeAdmin, wipeSurveyData, studentExists, addResult, addDeadline, addReminders
 from app.forms import LoginForm, RegistrationForm, ResetPasswordForm, RequestPasswordResetForm, ChangePasswordForm, CreateSurveyForm, DatesForm, SurveyForm, OverrideForm
 from app.survey import parse_roster
-from app.emails import send_password_reset_email, send_all_student_emails, send_all_reminder_emails, send_all_prof_emails
+from app.emails import send_password_reset_email, send_all_student_emails, send_all_prof_emails
 from datetime import datetime
 # from threading import Thread
 
@@ -78,7 +78,7 @@ def requestResetPassword():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user:
-            send_password_reset_email(user)     #invokes function defined in emails.py
+            send_password_reset_email(user)
             flash('Check email for instructions to reset password')
             return redirect(url_for('main.login'))
         else:
@@ -185,7 +185,8 @@ def emailallprofessors():
 def remindallstudents():
     if Student.query.count() >= 1:
         flash('All students emailed reminder')
-        send_all_reminder_emails()
+        # send_all_reminder_emails()
+        send_all_student_emails(reminder=True)
     else:
         flash('No students found in database - please upload valid roster')
     return redirect(url_for('main.index'))
