@@ -275,8 +275,8 @@ class Reminder(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     datetime = db.Column(db.DateTime, index=True, default=DT.utcnow())
     def __repr__(self):
-        return '<Reminder {}>'.format(str(self))
-    def __str__(self):
+        return '<Reminder {} UTC>'.format(self.default_format())
+    def default_format(self):
         return self.datetime.strftime('%Y-%m-%dT%H:%M')
     def update_datetime(self, dt):  # assume entered dt is valid
         self.datetime = dt

@@ -18,9 +18,6 @@ class APConfig(object):
     }]
     SCHEDULER_API_ENABLED = True
 
-def start_scheduler(config_class=APConfig):
-    current_app.config.from_object(config_class)
-    scheduler.init_app(current_app)
-    scheduler.start()
-
-start_scheduler()
+current_app.config.from_object(APConfig)
+scheduler.init_app(current_app)
+scheduler.start()

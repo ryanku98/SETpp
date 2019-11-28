@@ -148,7 +148,7 @@ def create_defaults(curr_time):
         defaults.append(curr_time.strftime(default_format))
     reminders = Reminder.query.order_by(Reminder.datetime).all()
     for reminder in reminders:
-        defaults.append(str(reminders[0]))
+        defaults.append(reminders[0].default_format())
     # fill in to exactly 4 datetimes
     while len(defaults) < 4:
         defaults.append(curr_time.strftime(default_format))
