@@ -9,8 +9,8 @@ class Config(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # NOTE: use localhost version when running locally
-    # SERVER_NAME = os.environ.get('SERVER_NAME') or 'localhost:5000'
-    SERVER_NAME = os.environ.get('SERVER_NAME') or 'setpp-174.herokuapp.com'
+    SERVER_NAME = os.environ.get('SERVER_NAME') or 'localhost:5000'
+    # SERVER_NAME = os.environ.get('SERVER_NAME') or 'setpp-174.herokuapp.com'
 
     # email stuff
     MAIL_SERVER = 'smtp.gmail.com'
