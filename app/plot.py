@@ -18,6 +18,7 @@ class PDFPlotter:
         self.section = section
         # random int to avoid collisions when mutliple threads try to generate reports for the same section
         self.file = os.path.join('documents', 'course_{}_{}.pdf'.format(self.section.course_id, random.randint(1, 999999999)))
+        self.createPDF()
 
     def peek_line(self, f):
         pos = f.tell()

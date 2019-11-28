@@ -2,30 +2,30 @@
 
 <p>Here are your TA's teaching evaluations for {{ section.subject + section.course_num }} - Section {{ section.course_id }}:</p>
 
-<p>SUBMISSIONS: {{ section.results.count() }}/{{ section.students.count() }}</p>
+<p>SUBMISSIONS: {{ results_count }}/{{ students_count }}</p>
 
-{% if section.results.count() == 0 %}
+{% if results_count == 0 %}
 <p>Unfortunately, statistics could not be calculated due to lack of submissions.</p>
 {% else %}
 <p>AVERAGES<br>
-{% for my_tuple in section.get_means() %}
+{% for my_tuple in means %}
   {{ my_tuple[0] }}: {{ '{:.3f}'.format(my_tuple[1]) }}<br>
 {% endfor %}
 </p>
 
 <p>STANDARD DEVIATIONS<br>
 {# STDs for population of 1 is a divide-by-0 error, so don't report #}
-{% if section.results.count() == 1 %}
+{% if results_count == 1 %}
   N/A - only 1 submission
 {% else %}
-  {% for my_tuple in section.get_stds() %}
+  {% for my_tuple in stds %}
   {{ my_tuple[0] }}: {{ '{:.3f}'.format(my_tuple[1]) }}<br>
   {% endfor %}
 {% endif %}
 </p>
 
 <p>FREE RESPONSES<br>
-{% for i, question_tuple in enumerate(section.get_frq_responses()) %}
+{% for i, question_tuple in enumerate(frq_responses) %}
 {{ i + 1 }}. {{ question_tuple[0] }}<br>
   {% for response in question_tuple[1] %}
   - {{ response }}<br>

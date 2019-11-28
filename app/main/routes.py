@@ -9,7 +9,6 @@ from app.forms import LoginForm, RegistrationForm, ResetPasswordForm, RequestPas
 from app.survey import parse_roster
 from app.emails import send_password_reset_email, send_all_student_emails, send_all_prof_emails
 from datetime import datetime
-# from threading import Thread
 
 @bp.route('/')
 @bp.route('/index')
@@ -115,8 +114,6 @@ def upload():
         addDeadline(datetime.utcnow(), day_offset=7)
         flash('Default deadline set to a week from today')
         # email all students now that roster is uploaded
-        # TODO: want to multithread here to avoid waiting for emails to load page, but request context can't be pushed. Fix?
-        # send_all_student_emails()
         return redirect(url_for('main.setDates'))
     return render_template('upload.html', title='Create Survey', form=form)
 
@@ -163,7 +160,7 @@ def create_defaults(curr_time):
 def emailallstudents():
     if Student.query.count() >= 1:
         flash('All students emailed')
-        # TODO: want to multithread here to avoid waiting for emails to load page, but request context can't be pushed. Fix?
+        # send_all_student_emails() multithreads the actual emailing portion so it no longer blocks until all emails have been sent
         send_all_student_emails()
     else:
         flash('No students found in database - please upload valid roster')
@@ -175,6 +172,7 @@ def emailallstudents():
 def emailallprofessors():
     if Section.query.count() >= 1:
         flash('All professors emailed')
+        # send_all_prof_emails() multithreads the actual emailing portion so it no longer blocks until all emails have been sent
         send_all_prof_emails()
     else:
         flash('No professors found in database - please upload valid roster')
@@ -185,7 +183,7 @@ def emailallprofessors():
 def remindallstudents():
     if Student.query.count() >= 1:
         flash('All students emailed reminder')
-        # send_all_reminder_emails()
+        # send_all_student_emails() multithreads the actual emailing portion so it no longer blocks until all emails have been sent
         send_all_student_emails(reminder=True)
     else:
         flash('No students found in database - please upload valid roster')
