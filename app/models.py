@@ -56,11 +56,12 @@ def load_user(id):
 
 def wipeSurveyData():
     """Deletes all files and database objects related to last survey session"""
-    Section.query.delete()
     Student.query.delete()
     Result.query.delete()
+    Section.query.delete()
     Deadline.query.delete()
     Reminder.query.delete()
+    db.session.commit()
     # TODO: wipe any csv, xlsx, and xls files from documents
 
 class Section(db.Model):
@@ -188,7 +189,6 @@ class Student(db.Model):
         return '<Student ID {} - Course {} - Email {}>'.format(self.s_id, self.c_id, self.email)
     def get_survey_link(self):
         return url_for('main.survey', s=self.s_id, c=self.c_id, _external=True)
-        # return url_for('survey', s=self.s_id, c=self.c_id, _external=True)
 
 def addStudent(app, s_id, c_id, email):
     """Function to add student, ensures no repeats (same student ID and course ID)"""

@@ -41,13 +41,15 @@ def parse_roster(form_roster_data):
         os.rename(filename, csv_filepath)
 
     # indices as expected by the given SCU roster template
-    c_id_i_roster = 1
-    subject_i_roster = 2
-    course_i_roster = 3
-    prof_name_i_roster = 6
-    prof_email_i_roster = 7
-    s_id_i_roster = 8
-    stud_email_i_roster = 9
+    C_ID_I = 1
+    SUBJECT_I = 2
+    COURSE_I = 3
+    PROF_NAME_I = 6
+    PROF_EMAIL_I = 7
+    S_ID_I = 8
+    STUDENT_EMAIL_I = 9
+    section_count = 0
+    student_count = 0
 
     with open(csv_filepath, 'r', newline='') as f_roster:
         # skip header row
@@ -58,22 +60,25 @@ def parse_roster(form_roster_data):
         student_threads = list()
         for row in rows:
             # add sections, addSection() avoids repeats
-            subject = row[subject_i_roster]
-            course_num = row[course_i_roster]
-            c_id = removeZeroes(row[c_id_i_roster])
-            prof_name = row[prof_name_i_roster]
-            prof_email = row[prof_email_i_roster]
+            subject = row[SUBJECT_I]
+            course_num = row[COURSE_I]
+            c_id = removeZeroes(row[C_ID_I])
+            prof_name = row[PROF_NAME_I]
+            prof_email = row[PROF_EMAIL_I]
             # only attempt to add a new section if moved onto new section
             if prev_c_id != c_id:
                 addSection(subject, course_num, c_id, prof_name, prof_email)
+                section_count += 1
                 prev_c_id = c_id
             # make one student per row
-            s_id = removeZeroes(row[s_id_i_roster])
-            stud_email = row[stud_email_i_roster]
+            s_id = removeZeroes(row[S_ID_I])
+            stud_email = row[STUDENT_EMAIL_I]
             t = Thread(target=addStudent, args=(current_app._get_current_object(), s_id, c_id, stud_email))
             student_threads.append(t)
             t.start()
         # make sure all adding threads finish before exiting (because emailing is called next and it might be called before all addStudent threads finish)
         for t in student_threads:
             t.join()
+            student_count += 1
     os.remove(csv_filepath)
+    print('ADDED {} SECTIONS AND {} STUDENTS'.format(section_count, student_count))
