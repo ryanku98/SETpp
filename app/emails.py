@@ -33,13 +33,13 @@ def send_async_emails(app, msg=None, msgs=None):
             for msg_tuple in msgs[: N_MESSAGES_PER_THREAD]:
                 try:
                     server.sendmail(sender, msg_tuple[0], msg_tuple[1])
-                    print('EMAIL {} IN THREAD {}'.format(msg_tuple[0], get_ident()))
+                    print('EMAIL: {} IN THREAD {}'.format(msg_tuple[0], get_ident()))
                 except Exception as e:
                     print('ERROR: Email to {} failed - {}'.format(msg_tuple[0], e))
         if msg is not None:
             try:
                 server.sendmail(sender, msg[0], msg[1])
-                print('EMAIL {}'.format(msg[0]))
+                print('EMAIL: {}'.format(msg[0]))
             except Exception as e:
                 print('ERROR: Email to {} failed - {}'.format(msg[0], e))
 
@@ -50,10 +50,12 @@ def create_student_msg(app, student, student_section_subject, student_section_co
     with app.app_context():
         msg['From'] = current_app.config['MAIL_ADDRESS']
     msg['To'] = student.email
-    msg['Subject'] = 'Fill Out Your SET++ Lab Evaluations for {}{} - Section {}'.format(student_section_subject, student_section_course_num, student.c_id)
+    # msg dict values cannot be rewritten after the first time for some reason, so doing this the static way
     if reminder:
         # add REMINDER to subject line if is reminder
-        msg['Subject'] = 'REMINDER: ' + msg['Subject']
+        msg['Subject'] = 'REMINDER: Fill Out Your SET++ Lab Evaluations for {}{} - Section {}'.format(student_section_subject, student_section_course_num, student.c_id)
+    else:
+        msg['Subject'] = 'Fill Out Your SET++ Lab Evaluations for {}{} - Section {}'.format(student_section_subject, student_section_course_num, student.c_id)
     if deadline is not None and deadline.is_valid():
         with app.app_context():
             text_body = render_template(os.path.join('email', 'student.txt'), student=student, link=link, deadline=deadline)
@@ -82,12 +84,15 @@ def send_all_student_emails(reminder=False):
                     threads.append(t)
                     t.start()
                 except Exception as e:
-                    print('ERROR: Email to {} failed - {}'.format(student.email, e))
+                    print('ERROR: Failed to create message for {} {} - {}'.format(student.s_id, student.email, e))
         # block until all threads have finished
         for t in threads:
             t.join()
         # send emails
-        print(log_header('STUDENT EMAILS'))
+        if reminder:
+            print(log_header('REMINDER EMAILS'))
+        else:
+            print(log_header('STUDENT EMAILS'))
         Thread(target=send_async_emails, args=(current_app_context,), kwargs={'msgs': msgs}).start()
     elif deadline is None:
         print('ERROR: Student emails cannot be sent without a deadline')
@@ -137,19 +142,22 @@ def send_all_prof_emails():
         means = section.get_means()
         stds = section.get_stds()
         frq_responses = section.get_frq_responses()
-        if results_count > 0:
-            pdf = PDFPlotter(section)
-            t = Thread(target=lambda m, app_con, s, r_c, s_c, me, st, f_r, f: \
-                m.insert(0, create_prof_emails(app_con, s, r_c, s_c, me, st, f_r, f)), \
-                args=(msgs, current_app_context, section, results_count, students_count, means, stds, frq_responses, pdf.file))
-            pdfs.append(pdf)
-        else:
-            # don't create PDF if no results were submitted
-            t = Thread(target=lambda m, app_con, s, r_c, s_c, me, st, f_r: \
-                m.insert(0, create_prof_emails(app_con, s, r_c, s_c, me, st, f_r)), \
-                args=(msgs, current_app_context, section, results_count, students_count, means, stds, frq_responses))
-        threads.append(t)
-        t.start()
+        try:
+            if results_count > 0:
+                pdf = PDFPlotter(section)
+                t = Thread(target=lambda m, app_con, s, r_c, s_c, me, st, f_r, f: \
+                    m.insert(0, create_prof_emails(app_con, s, r_c, s_c, me, st, f_r, f)), \
+                    args=(msgs, current_app_context, section, results_count, students_count, means, stds, frq_responses, pdf.file))
+                pdfs.append(pdf)
+            else:
+                # don't create PDF if no results were submitted
+                t = Thread(target=lambda m, app_con, s, r_c, s_c, me, st, f_r: \
+                    m.insert(0, create_prof_emails(app_con, s, r_c, s_c, me, st, f_r)), \
+                    args=(msgs, current_app_context, section, results_count, students_count, means, stds, frq_responses))
+            threads.append(t)
+            t.start()
+        except Exception as e:
+            print('ERROR: Failed to create message for {} {} - {}'.format(section.course_id, section.prof_email, e))
     # block until all threads are finished
     for t in threads:
         t.join()

@@ -20,14 +20,11 @@ def check_dates(app):
             r_sent = False
             for reminder in reminders:
                 if not reminder.is_valid(now):
-                    # if no emails have been sent yet
-                    if not r_sent:
-                        print(log_header('AUTOMATED EMAILS'))
-                        # with app.app_context():
-                        # send_all_reminder_emails()
-                        send_all_student_emails(reminder=True)
-                        r_sent = True
                     # if a reminder has been sent already, other reminders that may have passed within the same interval should not trigger another reminder (and should be also removed)
                     db.session.delete(reminder)
                     db.session.commit()
-
+                    # if no emails have been sent yet
+                    if not r_sent:
+                        r_sent = True
+                        print(log_header('AUTOMATED EMAILS'))
+                        send_all_student_emails(True)
