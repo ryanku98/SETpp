@@ -6,7 +6,7 @@ from app import db
 from app.main import bp
 from app.models import User, Student, Section, Result, Deadline, Reminder, log_header, wipeAdmin, wipeSurveyData, studentExists, addResult, addDeadline, addReminders
 from app.forms import LoginForm, RegistrationForm, ResetPasswordForm, RequestPasswordResetForm, ChangePasswordForm, CreateSurveyForm, DatesForm, SurveyForm, OverrideForm
-from app.survey import parse_roster
+from app.roster import parse_roster
 from app.emails import send_password_reset_email, send_all_student_emails, send_all_prof_emails
 from datetime import datetime
 
