@@ -107,14 +107,16 @@ def upload():
     form = CreateSurveyForm()
     if form.validate_on_submit():
         wipeSurveyData()
-        parse_roster(form.roster.data)
-        # TODO: handle corrupted file uploads
-        flash('File uploaded!')
-        # set default deadline to a week from upload in case admin doesn't custom input deadline on next page
-        addDeadline(datetime.utcnow(), day_offset=7)
-        flash('Default deadline set to a week from today')
-        # email all students now that roster is uploaded
-        return redirect(url_for('main.setDates'))
+        if parse_roster(form.roster.data):
+            # TODO: handle corrupted file uploads
+            flash('File uploaded!')
+            # set default deadline to a week from upload in case admin doesn't custom input deadline on next page
+            addDeadline(datetime.utcnow(), day_offset=7)
+            flash('Default deadline set to a week from today')
+            return redirect(url_for('main.setDates'))
+        else:
+            flash('File format incorrect, please refer to recommended roster template')
+            return redirect(url_for('main.upload'))
     return render_template('upload.html', title='Create Survey', form=form)
 
 @bp.route('/deadline', methods=['GET', 'POST'])

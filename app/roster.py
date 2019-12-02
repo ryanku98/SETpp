@@ -1,6 +1,7 @@
 import os
 import csv
 import xlrd
+import re
 from flask import current_app
 from app import db
 from app.models import log_header, addSection, addStudent
@@ -16,6 +17,20 @@ def removeZeroes(str):
     except:
         # needed for headers, etc. when passed-in value is not a string-type number
         return str
+
+def isValidEmail(email):
+    """Returns true if email is a correctly formatted SCU email"""
+    # help from https://www.geeksforgeeks.org/check-if-email-address-valid-or-not-in-python/
+    regex = '^\w+([\.-]?\w+)*@scu.edu+$'
+    if re.search(regex, email):
+        return True
+    return False
+
+def isID(val):
+    """Returns true if val is a valid ID"""
+    if isinstance(val, int) and val > 0:
+        return True
+    return False
 
 def parse_roster(form_roster_data):
     """Use uploaded roster to create corresponding database objects - expects a wtforms.fields.FileField object (i.e. form.<uploaded_file>.data)"""
@@ -64,16 +79,17 @@ def parse_roster(form_roster_data):
 
     with open(csv_filepath, 'r', newline='') as f_roster:
         # skip header row
-        next(f_roster)
+        # next(f_roster)
         rows = csv.reader(f_roster, delimiter=',')
+        header_row = next(rows)
         # ensure important columns have correct headers
-        if not (rows[0][C_ID_I].lower() == C_ID_S.lower() and \
-                rows[0][SUBJECT_I].lower() == SUBJECT_S.lower() and \
-                rows[0][COURSE_I].lower() == COURSE_S.lower() and \
-                rows[0][PROF_NAME_I].lower() == PROF_NAME_S.lower() and \
-                rows[0][PROF_EMAIL_I].lower() == PROF_EMAIL_S.lower() and \
-                rows[0][S_ID_I].lower() == S_ID_S.lower() and \
-                rows[0][STUDENT_EMAIL_I].lower() == SUBJECT_S.lower()):
+        if not (header_row[0][C_ID_I].lower() == C_ID_S.lower() and \
+                header_row[0][SUBJECT_I].lower() == SUBJECT_S.lower() and \
+                header_row[0][COURSE_I].lower() == COURSE_S.lower() and \
+                header_row[0][PROF_NAME_I].lower() == PROF_NAME_S.lower() and \
+                header_row[0][PROF_EMAIL_I].lower() == PROF_EMAIL_S.lower() and \
+                header_row[0][S_ID_I].lower() == S_ID_S.lower() and \
+                header_row[0][STUDENT_EMAIL_I].lower() == SUBJECT_S.lower()):
             # remove and return false (therefore exiting early) if roster does not have expected headers
             os.remove(csv_filepath)
             return False
@@ -88,17 +104,20 @@ def parse_roster(form_roster_data):
             c_id = removeZeroes(row[C_ID_I])
             prof_name = row[PROF_NAME_I]
             prof_email = row[PROF_EMAIL_I]
-            # only attempt to add a new section if moved onto new section
-            if prev_c_id != c_id:
+            # only attempt to add a new section if moved onto new valid section ID with properly formatted SCU email
+            if prev_c_id != c_id and isValidEmail(prof_email) and isID(c_id):
                 addSection(subject, course_num, c_id, prof_name, prof_email)
                 section_count += 1
                 prev_c_id = c_id
             # make one student per row
             s_id = removeZeroes(row[S_ID_I])
             stud_email = row[STUDENT_EMAIL_I]
-            t = Thread(target=addStudent, args=(current_app._get_current_object(), s_id, c_id, stud_email))
-            student_threads.append(t)
-            t.start()
+            if isValidEmail(stud_email) and isID(s_id) and prev_c_id == c_id:
+                # only add student if has correctly formatted SCU email
+                # prev_c_id only matches c_id if section with c_id was created - if not, don't add student because his/her section DNE in DB
+                t = Thread(target=addStudent, args=(current_app._get_current_object(), s_id, c_id, stud_email))
+                student_threads.append(t)
+                t.start()
         # make sure all adding threads finish before exiting (because emailing is called next and it might be called before all addStudent threads finish)
         for t in student_threads:
             t.join()
