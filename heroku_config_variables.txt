@@ -1,0 +1,13 @@
+# just a text file to keep track of and reasons for config variables
+
+# Heroku Postgres URL
+DATABASE_URL = postgres://...
+
+# executable script for flask
+FLASK_APP = SETpp.py
+
+# allows generation of url_for() outside of request context, which cannot be pushed
+SERVER_NAME = setpp-174.herokuapp.com
+
+# scheduler emails sometimes executes duplicate threads (resulting in duplicate emails) - this keeps from duplicating
+WEB_CONCURRENCY = 1
