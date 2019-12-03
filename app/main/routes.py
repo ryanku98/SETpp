@@ -13,6 +13,7 @@ from datetime import datetime
 @bp.route('/')
 @bp.route('/index')
 def index():
+    """Admin home page"""
     if not current_user.is_authenticated:
         flash('Login to view admin page!')
         return redirect(url_for('main.login'))
@@ -20,6 +21,7 @@ def index():
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
+    """Logs in admin"""
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
     if User.query.count() == 0:
@@ -38,11 +40,13 @@ def login():
 
 @bp.route('/logout')
 def logout():
+    """Logs out admin"""
     logout_user()
     return redirect(url_for('main.login'))
 
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
+    """Allows registration of admin"""
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
     if User.query.count() > 0:
@@ -61,6 +65,7 @@ def register():
 @bp.route('/changePassword', methods=['GET', 'POST'])
 @login_required
 def changePassword():
+    """Admin change password"""
     form = ChangePasswordForm()
     if form.validate_on_submit():
         current_user.set_password(form.password.data)
@@ -71,6 +76,7 @@ def changePassword():
 
 @bp.route('/requestreset', methods=['GET', 'POST'])
 def requestResetPassword():
+    """Request admin reset password form"""
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
     form = RequestPasswordResetForm()
@@ -86,6 +92,7 @@ def requestResetPassword():
 
 @bp.route('/resetPassword/<token>', methods=['GET', 'POST'])
 def resetPassword(token):
+    """Reset admin password page"""
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
     user = User.verify_reset_password_token(token)     #Decode token, should get id of admin user
@@ -101,6 +108,7 @@ def resetPassword(token):
 
 @bp.route('/upload', methods=['GET', 'POST'])
 def upload():
+    """Allows admin to upload student roster"""
     if not current_user.is_authenticated:
         flash('Login to create survey!')
         return redirect(url_for('main.login'))
@@ -158,6 +166,7 @@ def create_defaults(curr_time):
 @bp.route('/emailallstudents')
 @login_required
 def emailallstudents():
+    """Emails all students links to their survey"""
     if Student.query.count() >= 1:
         flash('All students emailed')
         # send_all_student_emails() multithreads the actual emailing portion so it no longer blocks until all emails have been sent
@@ -169,6 +178,7 @@ def emailallstudents():
 @bp.route('/emailallprofessors')
 @login_required
 def emailallprofessors():
+    """Emails all professors current analytics to their section(s)"""
     if Section.query.count() >= 1:
         flash('All professors emailed')
         # send_all_prof_emails() multithreads the actual emailing portion so it no longer blocks until all emails have been sent
@@ -180,6 +190,7 @@ def emailallprofessors():
 @bp.route('/remindallstudents')
 @login_required
 def remindallstudents():
+    """Emails all students who haven't entered a submission a link to their survey"""
     if Student.query.count() >= 1:
         flash('All students emailed reminder')
         # send_all_student_emails() multithreads the actual emailing portion so it no longer blocks until all emails have been sent
@@ -190,6 +201,7 @@ def remindallstudents():
 
 @bp.route('/survey', methods=['GET', 'POST'])
 def survey():
+    """Allow students to view survey form"""
     form = SurveyForm()
     if request.method == 'GET':
         s_id = request.args.get('s')
@@ -209,6 +221,7 @@ def survey():
 
 @bp.route('/OVERRIDE', methods=['GET', 'POST'])
 def override():
+    """Allow developers to wipe database if needed"""
     if User.query.count() == 0:
         return redirect(url_for('main.login'))
     form = OverrideForm()
@@ -223,4 +236,3 @@ def override():
         else:
             flash('Incorrect password')
     return render_template('override.html', title='DEVELOPER OVERRIDE', form=form)
-

@@ -138,6 +138,7 @@ class Section(db.Model):
         return tuple(responses_tuple)
 
 def addSection(subject, course_num, course_id, prof_name, prof_email):
+    """Adds section to database if it doesn't exist yet"""
     section = Section.query.filter_by(course_id=course_id).first()
     if section is None:
         section = Section(subject=subject, course_num=course_num, course_id=course_id, prof_name=prof_name, prof_email=prof_email)
@@ -170,6 +171,7 @@ def remove_frqs(zip_obj):
     return tuple(questions_tuple)
 
 def getQuestionsList():
+    """Retrieves list of questions from survey_questions.txt"""
     with open(os.path.join('documents', 'survey_questions.txt'), 'r') as f_questions:
         headers = f_questions.readlines()
     # strip trailing newline character that shows up for unknown reason
@@ -222,6 +224,7 @@ class Result(db.Model):
         return '<Result Course {} - Data: {}>'.format(self.course_id, self.response_data)
 
 def addResult(s_id, c_id, response_data):
+    """Adds valid result to database"""
     section = Section.query.filter_by(course_id=c_id).first()
     student = Student.query.filter_by(s_id=s_id, c_id=c_id).first()
     if section is not None:

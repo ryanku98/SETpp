@@ -14,7 +14,7 @@ class Config(object):
     MAIL_SERVER = 'smtp.gmail.com'
     MAIL_PORT = 587 # for starttls()
     MAIL_ADDRESS = 'setsystempp@gmail.com'
-    MAIL_PASSWORD = 'setpp_coen174'
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD') or 'setpp_coen174'
 
     DEVELOPERS = ('a1morales', 'eejohnson', 'rku')
     # key to wipe entire database (mainly to make it easy for devs when deployed on a cloud platform)
