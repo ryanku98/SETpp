@@ -4,8 +4,16 @@
 {% block content %}
 <html lang="en" dir="ltr">
 
+<head>
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
-  <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}"/>
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <meta charset="utf-8">
+  {% if title %}
+  <title>{{ title }} - SET++</title>
+  {% else %}
+  <title>Welcome to SET++</title>
+  {% endif %}
+</head>
 
   <nav class="navbar navbar-default">
       <div class="container">
@@ -42,15 +50,6 @@
       </div>
   </nav>
 
-  <head>
-    <meta charset="utf-8">
-    {% if title %}
-    <title>{{ title }} - SET++</title>
-    {% else %}
-    <title>Welcome to SET++</title>
-    {% endif %}
-  </head>
-
   <body>
     {% with messages = get_flashed_messages() %}
     {% if messages %}
@@ -61,7 +60,7 @@
     </ul>
     {% endif %}
     {% endwith %}
-    <div style="margin-left: 40px;">
+    <div style="margin-left: 40px; margin-right: 3%;">
         <img src="{{ url_for('static', filename='scu.png') }}" id="seal">
         <app id="app">
             {% block app_content %}{% endblock %}
