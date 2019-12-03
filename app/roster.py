@@ -83,14 +83,21 @@ def parse_roster(form_roster_data):
         rows = csv.reader(f_roster, delimiter=',')
         header_row = next(rows)
         # ensure important columns have correct headers
-        if not (header_row[0][C_ID_I].lower() == C_ID_S.lower() and \
-                header_row[0][SUBJECT_I].lower() == SUBJECT_S.lower() and \
-                header_row[0][COURSE_I].lower() == COURSE_S.lower() and \
-                header_row[0][PROF_NAME_I].lower() == PROF_NAME_S.lower() and \
-                header_row[0][PROF_EMAIL_I].lower() == PROF_EMAIL_S.lower() and \
-                header_row[0][S_ID_I].lower() == S_ID_S.lower() and \
-                header_row[0][STUDENT_EMAIL_I].lower() == SUBJECT_S.lower()):
+        if not (header_row[C_ID_I].lower() == C_ID_S.lower() and \
+                header_row[SUBJECT_I].lower() == SUBJECT_S.lower() and \
+                header_row[COURSE_I].lower() == COURSE_S.lower() and \
+                header_row[PROF_NAME_I].lower() == PROF_NAME_S.lower() and \
+                header_row[PROF_EMAIL_I].lower() == PROF_EMAIL_S.lower() and \
+                header_row[S_ID_I].lower() == S_ID_S.lower() and \
+                header_row[STUDENT_EMAIL_I].lower() == STUDENT_EMAIL_S.lower()):
             # remove and return false (therefore exiting early) if roster does not have expected headers
+            print('COMPARED {} vs. {}'.format(header_row[C_ID_I].lower(), C_ID_S.lower()))
+            print('COMPARED {} vs. {}'.format(header_row[SUBJECT_I].lower(), SUBJECT_S.lower()))
+            print('COMPARED {} vs. {}'.format(header_row[COURSE_I].lower(), COURSE_S.lower()))
+            print('COMPARED {} vs. {}'.format(header_row[PROF_NAME_I].lower(), PROF_NAME_S.lower()))
+            print('COMPARED {} vs. {}'.format(header_row[PROF_EMAIL_I].lower(), PROF_EMAIL_S.lower()))
+            print('COMPARED {} vs. {}'.format(header_row[S_ID_I].lower(), S_ID_S.lower()))
+            print('COMPARED {} vs. {}'.format(header_row[STUDENT_EMAIL_I].lower(), STUDENT_EMAIL_S.lower()))
             os.remove(csv_filepath)
             return False
 
