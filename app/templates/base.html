@@ -2,33 +2,26 @@
 {% import "bootstrap/wtf.html" as wtf %}
 
 
+<!--- This is the base html file that all others extend -->
+
 {% block head %}
 <head>
-
     {% block styles %}
     {{super()}}
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
     {% endblock %}
-
-  <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-  <meta charset="utf-8">
-  {% if title %}
-  <title>{{ title }} - SET++</title>
-  {% else %}
-  <title>Welcome to SET++</title>
-  {% endif %}
+    <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <meta charset="utf-8">
+    {% if title %}
+    <title>{{ title }} - SET++</title>
+    {% else %}
+    <title>Welcome to SET++</title>
+    {% endif %}
 </head>
 {% endblock %}
 
 
-
-
-
-
-
-
 {% block content %}
-
   <nav class="navbar navbar-default">
       <div class="container">
           <div class="navbar-header">
@@ -77,7 +70,7 @@
     <div style="margin-left: 40px; margin-right: 3%;">
         <img src="{{ url_for('static', filename='scu.png') }}" id="seal">
         <app id="app">
-            {% block app_content %}{% endblock %}
+            {% block app_content %}{% endblock %} <!---This is where the app content from other pages goes-->
         </app>
     </div>
   </body>
