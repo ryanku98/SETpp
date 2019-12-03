@@ -78,8 +78,6 @@ def parse_roster(form_roster_data):
     student_count = 0
 
     with open(csv_filepath, 'r', newline='') as f_roster:
-        # skip header row
-        # next(f_roster)
         rows = csv.reader(f_roster, delimiter=',')
         header_row = next(rows)
         # ensure important columns have correct headers
@@ -105,7 +103,7 @@ def parse_roster(form_roster_data):
         print(log_header('ROSTER UPLOADED - PARSING'))
         student_threads = list()
         for row in rows:
-            # add sections, addSection() avoids repeats
+            # add sections - addSection() avoids repeats
             subject = row[SUBJECT_I]
             course_num = row[COURSE_I]
             c_id = removeZeroes(row[C_ID_I])

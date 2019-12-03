@@ -9,6 +9,7 @@ from app.main.scheduler import check_dates
 scheduler = APScheduler()
 
 class APConfig(object):
+    """Separate config class for the background scheduler"""
     JOBS = [{
         'id': 'deadline-reminder-id',
         'func': check_dates,
