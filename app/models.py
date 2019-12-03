@@ -62,7 +62,6 @@ def wipeSurveyData():
     Deadline.query.delete()
     Reminder.query.delete()
     db.session.commit()
-    # TODO: wipe any csv, xlsx, and xls files from documents
 
 class Section(db.Model):
     """Defines the Section database model - all created when roster is uploaded"""
@@ -132,8 +131,6 @@ class Section(db.Model):
                 # add responses for question i to a list
                 for result in results:
                     answers_tuple.append(result.response_data[i])
-                # question_tuple = (question, tuple(answers_tuple))
-                # responses_tuple.append(question_tuple)
                 responses_tuple.append((question, tuple(answers_tuple)))
         return tuple(responses_tuple)
 
@@ -145,7 +142,7 @@ def addSection(subject, course_num, course_id, prof_name, prof_email):
         db.session.add(section)
         db.session.commit()
         log_added(section)
-    # the following cases (theoretically) should not happen if the roster is properly ordered by course ID
+    # the following case (theoretically) should not happen if the roster is properly ordered by course ID
     else:
         print('ERROR: {} cannot be added - already exists'.format(section))
 
@@ -155,7 +152,6 @@ def remove_frqs(zip_obj):
     questions, items = zip(*zip_obj)
     questions = list(questions)
     items = list(items)
-    # questions = getQuestionsList()
     frqs = []   # list of frqs that showed up
     for i, question in enumerate(questions):
         if 'free text response' in question.lower():
