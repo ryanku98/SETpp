@@ -19,4 +19,5 @@ These instructions assume a Linux terminal (MacOSX, Ubuntu, etc.).1.
         pip3 install -r requirements.txt
 5.  Run the application
         flask run
-6.  Access the webpage through your browser•localhost:5000
+6.  Access the webpage through your browser
+        localhost:5000
