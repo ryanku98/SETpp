@@ -94,6 +94,7 @@ def send_all_student_emails(reminder=False):
         else:
             print(log_header('STUDENT EMAILS'))
         Thread(target=send_async_emails, args=(current_app_context,), kwargs={'msgs': msgs}).start()
+        print('SENT {} EMAILS'.format(len(msgs)))
     elif deadline is None:
         print('ERROR: Student emails cannot be sent without a deadline')
     elif not deadline.is_valid():
@@ -167,6 +168,7 @@ def send_all_prof_emails():
     # send emails
     print(log_header('PROFESSOR EMAILS'))
     Thread(target=send_async_emails, args=(current_app_context,), kwargs={'msgs': msgs}).start()
+    print('SENT {} EMAILS'.format(len(msgs)))
 
 def send_password_reset_email(user):
     """Sends a reset password email with a generated JWT token"""
