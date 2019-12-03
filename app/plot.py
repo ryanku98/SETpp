@@ -14,6 +14,7 @@ import random
 # the end of the block, even if an Exception occurs.
 
 class PDFPlotter:
+"""Class for generating plots"""
     def __init__(self, section):
         self.section = section
         # random int to avoid collisions when mutliple threads try to generate reports for the same section
@@ -21,6 +22,7 @@ class PDFPlotter:
         self.createPDF()
 
     def peek_line(self, f):
+        """Helper method to get the text of the next line without skipping it"""
         pos = f.tell()
         line = f.readline()
         f.seek(pos)
@@ -40,8 +42,10 @@ class PDFPlotter:
             graph_vals = []
             for i in (range(0, len(df.columns))):
                 if i not in fr_list:
+                    """Question is not a FRQ, so add it to the array of values to graph"""
                     graph_vals.append( df[i] )
                 else:
+                    """Hit free response, plot all subplots of non FRQ, plot free responses on the next page"""
                     if len(graph_vals) > 0:
                         self.generatePlots(pdf,fp_questions,graph_vals)
                         plt.subplots_adjust(left=.15, right=0.75, wspace=0.7, hspace=.25*len(graph_vals))
@@ -80,13 +84,14 @@ class PDFPlotter:
             question = questions.readline()
             ax = plt.subplot(grid+i)
             if "hours" in question:
+                """generate barplot for questions involving time"""
                 x = graph_vals[i].values
                 counter = collections.Counter(x)
                 label = [1.5,2.0,2.5,3.0,3.5]
                 for l in label:
                     if l not in counter:
                         counter[l] = 0
-                counter = sorted(counter.items(), key=lambda x:x[0])
+                counter = sorted(counter.items(), key=lambda x:x[0])   #get frequency values of various choices
 
                 scalars = [x[1] for x in counter]
                 labels = [x[0] for x in counter]
@@ -101,6 +106,7 @@ class PDFPlotter:
                       horizontalalignment='center',
                       verticalalignment='center')
             else:
+                """Generate histogram for questions regarding rating"""
                 x = list(pd.to_numeric(graph_vals[i]).values)
                 plt.hist(x, rwidth=0.8, range=(1,5), bins=[0.5,1.5,2.5,3.5,4.5,5.5], density=True)
                 plt.xlabel('Rating')
