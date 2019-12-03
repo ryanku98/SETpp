@@ -5,7 +5,7 @@
 <html lang="en" dir="ltr">
 
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
-  <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}"/>
+  <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}"/>
 
   <nav class="navbar navbar-default">
       <div class="container">
@@ -34,6 +34,8 @@
                   {% if current_user.is_authenticated %}
                   <li> <a href="{{ url_for('main.changePassword') }}">Change Password</a> </li>
                   <li> <a href="{{ url_for('main.logout') }}">Admin Logout</a> </li>
+                  {% else %}
+                  <li> <a href="{{ url_for('main.login') }}">Admin Login</a> </li>
                   {% endif %}
               </ul>
           </div>
