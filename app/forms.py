@@ -1,10 +1,10 @@
 from flask import current_app
 from flask_wtf import FlaskForm
+from flask_login import current_user
 from flask_wtf.file import FileRequired, FileAllowed
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, FileField, IntegerField, RadioField, TextAreaField
 from wtforms.ext.dateutil.fields import DateTimeField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length
-# from app import app
 from app.models import User, Section, Student, Result, Deadline, Reminder, is_valid_datetime
 from datetime import datetime
 
@@ -108,7 +108,6 @@ class SurveyForm(FlaskForm):
         elif student.survey_submitted:
             raise ValidationError('Database indicates this student has already submitted a survey for lab section {}.'.format(student.c_id))
 
-    # TODO: make sure this executes/validates properly - still unsure
     def validate_submit(self, submit):
         deadline = Deadline.query.first()
         if deadline is not None and not deadline.is_valid():

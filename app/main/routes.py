@@ -108,7 +108,6 @@ def upload():
     if form.validate_on_submit():
         wipeSurveyData()
         if parse_roster(form.roster.data):
-            # TODO: handle corrupted file uploads
             flash('File uploaded!')
             # set default deadline to a week from upload in case admin doesn't custom input deadline on next page
             addDeadline(datetime.utcnow(), day_offset=7)
@@ -156,7 +155,6 @@ def create_defaults(curr_time):
         defaults.append(curr_time.strftime(default_format))
     return defaults
 
-# TODO: remove when done testing
 @bp.route('/emailallstudents')
 @login_required
 def emailallstudents():
@@ -168,7 +166,6 @@ def emailallstudents():
         flash('No students found in database - please upload valid roster')
     return redirect(url_for('main.index'))
 
-# TODO: remove when done testing
 @bp.route('/emailallprofessors')
 @login_required
 def emailallprofessors():
