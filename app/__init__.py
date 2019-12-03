@@ -14,9 +14,11 @@ login.login_view = 'login'
 bootstrap = Bootstrap()
 
 def create_app(config_class=Config):
+    """Initialize Flask application"""
     app = Flask(__name__, static_folder=static_folder)
     app.config.from_object(config_class)
 
+    # init various modules
     db.init_app(app)
     migrate.init_app(app, db)
     login.init_app(app)

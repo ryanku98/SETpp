@@ -138,6 +138,7 @@ def send_all_prof_emails():
     pdfs = list()
     for section in Section.query.all():
         t = None
+        # create section data
         results_count = section.results.count()
         students_count = section.students.count()
         means = section.get_means()
