@@ -1,7 +1,7 @@
 # just a text file to keep track of and reasons for config variables
 
 # Heroku Postgres URL
-DATABASE_URL = postgres://...
+DATABASE_URL = postgres://<url>
 
 # executable script for flask
 FLASK_APP = SETpp.py
@@ -11,3 +11,9 @@ SERVER_NAME = setpp-174.herokuapp.com
 
 # scheduler emails sometimes executes duplicate threads (resulting in duplicate emails) - this keeps from duplicating
 WEB_CONCURRENCY = 1
+
+# password for developer override of database
+OVERRIDE_PW = <password>
+
+# email password
+MAIL_PASSWORD = <password>
