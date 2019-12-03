@@ -14,7 +14,7 @@ import random
 # the end of the block, even if an Exception occurs.
 
 class PDFPlotter:
-"""Class for generating plots"""
+    """Class for generating plots"""
     def __init__(self, section):
         self.section = section
         # random int to avoid collisions when mutliple threads try to generate reports for the same section
