@@ -10,16 +10,33 @@ We recommend that this system be used by the School of Engineering.
 
 INSTRUCTIONS
 
-These instructions assume a Linux terminal (MacOSX, Ubuntu, etc.).1.
+These instructions assume a Linux terminal (MacOSX, Ubuntu, etc.).
 
-1.  Clone git repository onto your machine•git clone (https://github.com/ryanku98/SETpp.git)
-2.  Install Python3/Ensure Python3 is installed (installation for Python3 varies by system)
-3.  Create and source a virtual environment (optional)
-        python3 -m venv venv
-        source venv/bin/activate
-4.  Install the necessary requirements
-        pip3 install -r requirements.txt
-5.  Run the application
-        flask run
-6.  Access the webpage through your browser
-        localhost:5000
+1. Clone git repository onto your machine
+```bash
+git clone (https://github.com/ryanku98/SETpp.git)
+```
+2. Install Python3/Ensure Python3 is installed (installation for Python3 varies by system)
+3. Create and source a virtual environment (optional)
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+4. Install the necessary requirements
+```bash
+pip3 install -r requirements.txt
+```
+5. Setup database
+```bash
+flask db init
+flask db migrate
+flask db upgrade
+```
+6. Run the application
+```bash
+flask run
+```
+7. Access the webpage through your browser
+```
+localhost:5000/
+```
